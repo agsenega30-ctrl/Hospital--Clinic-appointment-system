@@ -384,9 +384,9 @@ No license has been specified yet. Add an appropriate open-source license file i
 
 ## 👨‍💻 Author
 
-**Mohan Raj Balakrishnan**
+**AG Senega**
 
-Electronics and Communication Engineering (ECE)
+B.Tech Information Technology
 
 GitHub: Add your GitHub profile URL here.
 
