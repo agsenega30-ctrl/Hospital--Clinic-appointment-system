@@ -388,7 +388,7 @@ No license has been specified yet. Add an appropriate open-source license file i
 
 B.Tech Information Technology
 
-GitHub: Add your GitHub profile URL here.
+GitHub: https://github.com/agsenega30-ctrl
 
 ## ⭐ Acknowledgements
 
