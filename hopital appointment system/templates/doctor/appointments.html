@@ -1,0 +1,126 @@
+{% extends "base_dashboard.html" %}
+
+{% block title %}Manage Appointments - {{ app_name }}{% endblock %}
+{% block page_title %}Patient Consultations{% endblock %}
+
+{% block dashboard_content %}
+<div class="card">
+  <div class="card-header" style="flex-wrap: wrap; gap: 1rem;">
+    <div style="display: flex; align-items: center; gap: 0.65rem;">
+      <i class="fa-solid fa-calendar-check" style="color: var(--teal-600); font-size: 1.2rem;"></i>
+      <h3 class="card-title">Manage Patient Appointments</h3>
+    </div>
+    <span style="font-size: 0.85rem; color: var(--slate-500);">Total: <strong>{{ total_count }}</strong> bookings</span>
+  </div>
+
+  <!-- Filters Row -->
+  <div style="background: var(--slate-50); border-bottom: 1px solid var(--slate-200); padding: 1rem 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+    <!-- Status Tabs -->
+    <div style="display: flex; gap: 0.4rem; overflow-x: auto;">
+      {% set statuses = [('all', 'All'), ('pending', 'Pending Requests'), ('confirmed', 'Confirmed'), ('completed', 'Completed'), ('cancelled', 'Cancelled')] %}
+      {% for s_val, s_label in statuses %}
+        <a href="{{ url_for('doctor.appointment_management', status=s_val, date=selected_date) }}" class="btn btn-sm {% if current_status == s_val %}btn-primary{% else %}btn-secondary{% endif %}" style="border-radius: 20px;">
+          {{ s_label }}
+        </a>
+      {% endfor %}
+    </div>
+
+    <!-- Date Filter Form -->
+    <form action="{{ url_for('doctor.appointment_management') }}" method="GET" style="display: flex; gap: 0.5rem; align-items: center;">
+      <input type="hidden" name="status" value="{{ current_status }}">
+      <input type="date" name="date" class="form-control" value="{{ selected_date }}" style="padding: 0.35rem 0.65rem; font-size: 0.85rem; width: auto;">
+      <button type="submit" class="btn btn-secondary btn-sm"><i class="fa-solid fa-filter"></i> Filter</button>
+      {% if selected_date %}
+        <a href="{{ url_for('doctor.appointment_management', status=current_status) }}" class="btn btn-secondary btn-sm" title="Clear Date">&times;</a>
+      {% endif %}
+    </form>
+  </div>
+
+  <div class="card-body" style="padding: 0;">
+    {% if appointments and appointments|length > 0 %}
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Patient</th>
+              <th>Date & Time</th>
+              <th>Fee</th>
+              <th>Status</th>
+              <th>Symptoms / Reason</th>
+              <th>Manage Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for app in appointments %}
+              <tr>
+                <td>
+                  <strong>{{ app.patient.full_name if app.patient else 'Patient' }}</strong>
+                  <div style="font-size: 0.8rem; color: var(--slate-500);">
+                    <i class="fa-solid fa-phone"></i> {{ app.patient.phone if app.patient else 'N/A' }}
+                  </div>
+                </td>
+                <td>
+                  <div><strong>{{ app.appointment_date | format_date }}</strong></div>
+                  <div style="font-size: 0.8rem; color: var(--slate-500);">{{ app.start_time | format_time }} - {{ app.end_time | format_time }}</div>
+                </td>
+                <td>
+                  <strong style="color: var(--teal-600);">₹{{ app.consultation_fee }}</strong>
+                </td>
+                <td>
+                  <span class="badge badge-{{ app.status }}">{{ app.status }}</span>
+                </td>
+                <td>
+                  <span style="font-size: 0.85rem; color: var(--slate-700);">
+                    {{ app.reason_for_visit or 'General Consultation' }}
+                  </span>
+                  {% if app.status == 'cancelled' and app.cancellation_reason %}
+                    <div style="font-size: 0.75rem; color: var(--danger-main); margin-top: 0.2rem;">
+                      Reason: {{ app.cancellation_reason }}
+                    </div>
+                  {% endif %}
+                </td>
+                <td>
+                  <div style="display: flex; gap: 0.4rem;">
+                    {% if app.status == 'pending' %}
+                      <button type="button" class="btn btn-primary btn-sm btn-update-status" data-appointment-id="{{ app._id }}" data-status="confirmed" title="Confirm Appointment">
+                        <i class="fa-solid fa-check"></i>
+                      </button>
+                    {% endif %}
+
+                    {% if app.status in ['pending', 'confirmed'] %}
+                      <button type="button" class="btn btn-success btn-sm btn-update-status" data-appointment-id="{{ app._id }}" data-status="completed" title="Mark Completed">
+                        <i class="fa-solid fa-circle-check"></i> Complete
+                      </button>
+                      <button type="button" class="btn btn-danger btn-sm btn-open-cancel" data-appointment-id="{{ app._id }}" title="Cancel Consultation">
+                        <i class="fa-solid fa-xmark"></i>
+                      </button>
+                    {% endif %}
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      {% if total_pages > 1 %}
+        <div style="padding: 1.25rem; display: flex; justify-content: center; gap: 0.5rem; border-top: 1px solid var(--slate-100);">
+          {% for p in range(1, total_pages + 1) %}
+            <a href="{{ url_for('doctor.appointment_management', status=current_status, date=selected_date, page=p) }}" class="btn btn-sm {% if p == current_page %}btn-primary{% else %}btn-secondary{% endif %}">
+              {{ p }}
+            </a>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+    {% else %}
+      <div class="empty-state">
+        <div class="empty-state-icon"><i class="fa-regular fa-calendar-xmark"></i></div>
+        <h3 class="empty-state-title">No appointments found</h3>
+        <p class="empty-state-text">There are no consultations matching your selected status and date filter.</p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

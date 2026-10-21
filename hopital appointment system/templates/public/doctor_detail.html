@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}Dr. {{ doctor.full_name }} - {{ profile.specialization }} - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div style="max-width: 1000px; margin: 3rem auto; padding: 0 1.5rem;">
+  <div style="margin-bottom: 1.5rem;">
+    <a href="{{ url_for('public.doctors_directory') }}" class="btn btn-secondary btn-sm">
+      <i class="fa-solid fa-arrow-left"></i> Back to Doctor Directory
+    </a>
+  </div>
+
+  <div class="card">
+    <div class="card-body" style="padding: 2.5rem;">
+      <div style="display: flex; gap: 2rem; align-items: flex-start; flex-wrap: wrap;">
+        <div class="avatar-circle" style="width: 100px; height: 100px; font-size: 2.5rem; flex-shrink: 0; box-shadow: var(--shadow-md);">
+          <i class="fa-solid fa-user-doctor"></i>
+        </div>
+
+        <div style="flex: 1; min-width: 280px;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
+            <div>
+              <h1 style="font-size: 1.85rem; font-weight: 800; color: var(--slate-900);">{{ doctor.full_name }}</h1>
+              <span class="badge badge-confirmed" style="font-size: 0.85rem; margin-top: 0.25rem;">{{ profile.specialization }}</span>
+              <p style="color: var(--slate-500); font-size: 0.95rem; margin-top: 0.4rem;">
+                <i class="fa-solid fa-graduation-cap"></i> {{ profile.qualifications }} &bull; {{ profile.experience_years }} Years Clinical Practice
+              </p>
+            </div>
+
+            <div style="text-align: right;">
+              <span style="font-size: 0.82rem; color: var(--slate-500); display: block;">Consultation Fee</span>
+              <strong style="font-size: 1.6rem; color: var(--teal-600);">₹{{ profile.consultation_fee }}</strong>
+            </div>
+          </div>
+
+          <div style="margin-top: 1.75rem; border-top: 1px solid var(--slate-100); padding-top: 1.5rem;">
+            <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--slate-800); margin-bottom: 0.5rem;">About Doctor</h3>
+            <p style="color: var(--slate-600); line-height: 1.6; font-size: 0.95rem;">
+              {{ profile.biography }}
+            </p>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.25rem; margin-top: 2rem; background: var(--slate-50); border: 1px solid var(--slate-200); border-radius: var(--radius-md); padding: 1.25rem;">
+            <div>
+              <span style="font-size: 0.78rem; text-transform: uppercase; font-weight: 700; color: var(--slate-400);">Working Hours</span>
+              <p style="font-size: 0.95rem; font-weight: 600; color: var(--slate-800); margin-top: 0.2rem;">
+                {{ profile.working_hours.start }} - {{ profile.working_hours.end }}
+              </p>
+            </div>
+            <div>
+              <span style="font-size: 0.78rem; text-transform: uppercase; font-weight: 700; color: var(--slate-400);">Working Days</span>
+              <p style="font-size: 0.95rem; font-weight: 600; color: var(--slate-800); margin-top: 0.2rem;">
+                {{ profile.working_days | join(', ') }}
+              </p>
+            </div>
+            <div>
+              <span style="font-size: 0.78rem; text-transform: uppercase; font-weight: 700; color: var(--slate-400);">Slot Duration</span>
+              <p style="font-size: 0.95rem; font-weight: 600; color: var(--slate-800); margin-top: 0.2rem;">
+                {{ profile.appointment_duration_minutes }} minutes
+              </p>
+            </div>
+          </div>
+
+          <div style="margin-top: 2rem; display: flex; gap: 1rem;">
+            {% if session.get('user_role') == 'patient' %}
+              <a href="{{ url_for('patient.book_appointment', doctor_id=doctor._id) }}" class="btn btn-primary btn-lg" style="flex: 1;">
+                <i class="fa-solid fa-calendar-check"></i> Book Consultation with {{ doctor.full_name }}
+              </a>
+            {% else %}
+              <a href="{{ url_for('auth.login', next=url_for('patient.book_appointment', doctor_id=doctor._id)) }}" class="btn btn-primary btn-lg" style="flex: 1;">
+                <i class="fa-solid fa-calendar-check"></i> Log In to Book Appointment
+              </a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

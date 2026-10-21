@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Hospital & Clinic Appointment System{% endblock %}</title>
+  <meta name="description" content="{% block meta_desc %}Modern, secure hospital and clinic appointment booking system connecting patients, doctors, and healthcare administrators.{% endblock %}">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+
+  <!-- Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <!-- FullCalendar CDN -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/main.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+  <!-- Database Indicator Banner -->
+  {% if is_mock %}
+  <div style="background: #f0fdf4; border-bottom: 1px solid #bbf7d0; color: #166534; padding: 0.45rem 1.5rem; font-size: 0.84rem; display: flex; align-items: center; justify-content: space-between; z-index: 1000; position: relative;">
+    <div>
+      <i class="fa-solid fa-bolt" style="color: #16a34a;"></i>
+      <strong>1-Click Zero-Config Mode Active:</strong> Running embedded in-memory database with pre-loaded demo doctors, patients, and appointments. No manual database setup needed!
+    </div>
+    <span class="badge badge-completed" style="font-size: 0.7rem; padding: 0.15rem 0.5rem;">Embedded DB Ready</span>
+  </div>
+  {% elif not db_connected %}
+  <div class="db-offline-banner">
+    <div>
+      <i class="fa-solid fa-triangle-exclamation"></i>
+      <strong>MongoDB Service Notice:</strong> Unable to connect to MongoDB server.
+    </div>
+  </div>
+  {% endif %}
+
+  {% block layout %}
+  <!-- Public Layout by Default -->
+  <header class="public-navbar">
+    <a href="{{ url_for('public.index') }}" class="brand-logo">
+      <div class="brand-icon"><i class="fa-solid fa-heart-pulse"></i></div>
+      <span>{{ app_name }}</span>
+    </a>
+
+    <ul class="nav-links">
+      <li><a href="{{ url_for('public.index') }}">Home</a></li>
+      <li><a href="{{ url_for('public.doctors_directory') }}">Find Doctors</a></li>
+      <li><a href="{{ url_for('public.contact') }}">Contact & Help</a></li>
+    </ul>
+
+    <div class="nav-actions">
+      {% if session.get('user_id') %}
+        {% set role = session.get('user_role') %}
+        {% if role == 'doctor' %}
+          <a href="{{ url_for('doctor.dashboard') }}" class="btn btn-outline-primary"><i class="fa-solid fa-user-doctor"></i> Doctor Portal</a>
+        {% elif role == 'admin' %}
+          <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-primary"><i class="fa-solid fa-shield-halved"></i> Admin Portal</a>
+        {% else %}
+          <a href="{{ url_for('patient.dashboard') }}" class="btn btn-primary"><i class="fa-solid fa-hospital-user"></i> Patient Dashboard</a>
+        {% endif %}
+        <a href="{{ url_for('auth.logout') }}" class="btn btn-secondary btn-sm" title="Log Out"><i class="fa-solid fa-arrow-right-from-bracket"></i></a>
+      {% else %}
+        <a href="{{ url_for('auth.login') }}" class="btn btn-secondary"><i class="fa-solid fa-arrow-right-to-bracket"></i> Log In</a>
+        <a href="{{ url_for('auth.register') }}" class="btn btn-primary"><i class="fa-solid fa-user-plus"></i> Register</a>
+      {% endif %}
+    </div>
+  </header>
+
+  <main style="flex: 1;">
+    <div style="max-width: 1200px; margin: 1.5rem auto; padding: 0 1.5rem;">
+      {% include 'shared/_alerts.html' %}
+    </div>
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer style="background: white; border-top: 1px solid var(--slate-200); padding: 3rem 2rem 1.5rem; margin-top: auto;">
+    <div style="max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 2rem;">
+      <div>
+        <div class="brand-logo" style="margin-bottom: 0.75rem;">
+          <div class="brand-icon"><i class="fa-solid fa-heart-pulse"></i></div>
+          <span>{{ app_name }}</span>
+        </div>
+        <p style="color: var(--slate-500); font-size: 0.88rem; line-height: 1.6;">
+          Compassionate healthcare delivery, transparent doctor scheduling, and accessible appointment management.
+        </p>
+      </div>
+      <div>
+        <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--slate-800); margin-bottom: 0.85rem;">Quick Links</h4>
+        <ul style="list-style: none; display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.88rem;">
+          <li><a href="{{ url_for('public.doctors_directory') }}">Doctor Directory</a></li>
+          <li><a href="{{ url_for('auth.register') }}">Patient Registration</a></li>
+          <li><a href="{{ url_for('auth.login') }}">Doctor & Staff Login</a></li>
+          <li><a href="{{ url_for('public.contact') }}">Support & Inquiries</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--slate-800); margin-bottom: 0.85rem;">Emergency & Contact</h4>
+        <p style="color: var(--slate-600); font-size: 0.88rem; margin-bottom: 0.4rem;"><i class="fa-solid fa-phone" style="color: var(--primary-600);"></i> +91 80 2345 6789</p>
+        <p style="color: var(--slate-600); font-size: 0.88rem; margin-bottom: 0.4rem;"><i class="fa-solid fa-envelope" style="color: var(--primary-600);"></i> care@antigravityhospital.com</p>
+        <p style="color: var(--slate-600); font-size: 0.88rem;"><i class="fa-solid fa-location-dot" style="color: var(--primary-600);"></i> 42 Health Sciences Avenue, Bangalore</p>
+      </div>
+    </div>
+    <div style="max-width: 1200px; margin: 2rem auto 0; padding-top: 1.5rem; border-top: 1px solid var(--slate-200); display: flex; justify-content: space-between; align-items: center; font-size: 0.82rem; color: var(--slate-500); flex-wrap: wrap; gap: 1rem;">
+      <p>&copy; {{ now_year }} {{ app_name }}. All rights reserved.</p>
+      <p><span class="badge badge-confirmed" style="font-size: 0.72rem;">Academic Project Prototype</span></p>
+    </div>
+  </footer>
+  {% endblock layout %}
+
+  <!-- Shared Modals -->
+  <!-- 1. Cancellation Modal -->
+  <div class="modal-backdrop" id="cancelModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title"><i class="fa-solid fa-calendar-xmark" style="color: var(--danger-main);"></i> Cancel Appointment</h3>
+        <button type="button" class="modal-close-btn" onclick="closeModal('cancelModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 0.9rem; color: var(--slate-600); margin-bottom: 1rem;">
+          Are you sure you want to cancel this appointment? This action will free up the doctor's time slot for other patients.
+        </p>
+        <div class="form-group">
+          <label class="form-label">Reason for cancellation (optional):</label>
+          <textarea id="cancelReasonInput" class="form-control" rows="3" placeholder="Briefly describe why you are cancelling..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('cancelModal')">Keep Appointment</button>
+        <button type="button" class="btn btn-danger" id="confirmCancelBtn">Confirm Cancellation</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Rescheduling Modal -->
+  <div class="modal-backdrop" id="rescheduleModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title"><i class="fa-solid fa-calendar-days" style="color: var(--primary-600);"></i> Reschedule Appointment</h3>
+        <button type="button" class="modal-close-btn" onclick="closeModal('rescheduleModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Select New Date:</label>
+          <input type="date" id="rescheduleDateInput" class="form-control" min="{{ get_now_local().strftime('%Y-%m-%d') }}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Available Slots on Selected Date:</label>
+          <div id="rescheduleSlotsContainer" style="min-height: 60px;">
+            <div style="color: #64748b; font-size: 0.88rem;">Select a date above to load available slots.</div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('rescheduleModal')">Cancel</button>
+        <button type="button" class="btn btn-primary" id="confirmRescheduleBtn" disabled>Confirm Reschedule</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Calendar Event Info Modal -->
+  <div class="modal-backdrop" id="calendarEventModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title" id="calModalTitle">Appointment Details</h3>
+        <button type="button" class="modal-close-btn" onclick="closeModal('calendarEventModal')">&times;</button>
+      </div>
+      <div class="modal-body" style="display: flex; flex-direction: column; gap: 0.75rem; font-size: 0.92rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="color: var(--slate-500);">Status:</span>
+          <span id="calModalStatus" class="badge"></span>
+        </div>
+        <div style="display: flex; justify-content: space-between;">
+          <span style="color: var(--slate-500);">Doctor:</span>
+          <strong id="calModalDoctor"></strong>
+        </div>
+        <div style="display: flex; justify-content: space-between;">
+          <span style="color: var(--slate-500);">Specialization:</span>
+          <span id="calModalSpecialization"></span>
+        </div>
+        <div style="display: flex; justify-content: space-between;">
+          <span style="color: var(--slate-500);">Patient:</span>
+          <strong id="calModalPatient"></strong>
+        </div>
+        <div style="display: flex; justify-content: space-between;">
+          <span style="color: var(--slate-500);">Date & Time:</span>
+          <span id="calModalTime"></span>
+        </div>
+        <div style="display: flex; justify-content: space-between;">
+          <span style="color: var(--slate-500);">Consultation Fee:</span>
+          <span id="calModalFee" style="font-weight: 700; color: var(--primary-700);"></span>
+        </div>
+        <div style="border-top: 1px solid var(--slate-100); padding-top: 0.5rem;">
+          <span style="color: var(--slate-500); display: block; margin-bottom: 0.2rem;">Reason for Visit:</span>
+          <p id="calModalReason" style="color: var(--slate-700); background: var(--slate-50); padding: 0.5rem; border-radius: var(--radius-sm);"></p>
+        </div>
+        <div id="calModalCancelRow" style="display: none; border-top: 1px solid var(--slate-100); padding-top: 0.5rem;">
+          <span style="color: var(--danger-main); font-weight: 600;">Cancellation Reason:</span>
+          <p id="calModalCancelReason" style="color: var(--slate-600);"></p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('calendarEventModal')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/appointments.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/calendar.js') }}"></script>
+  {% block extra_scripts %}{% endblock %}
+</body>
+</html>

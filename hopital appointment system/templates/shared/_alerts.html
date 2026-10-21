@@ -1,0 +1,23 @@
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="alerts-container">
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category if category != 'message' else 'info' }}">
+          <div style="display: flex; align-items: center; gap: 0.65rem;">
+            {% if category == 'success' %}
+              <i class="fa-solid fa-circle-check"></i>
+            {% elif category == 'danger' %}
+              <i class="fa-solid fa-circle-exclamation"></i>
+            {% elif category == 'warning' %}
+              <i class="fa-solid fa-triangle-exclamation"></i>
+            {% else %}
+              <i class="fa-solid fa-circle-info"></i>
+            {% endif %}
+            <span>{{ message }}</span>
+          </div>
+          <button type="button" class="alert-close-btn" aria-label="Close">&times;</button>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}

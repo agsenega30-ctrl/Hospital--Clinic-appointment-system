@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}Notifications - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div style="max-width: 900px; margin: 2rem auto; padding: 0 1.5rem;">
+  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
+    <div>
+      <h1 style="font-size: 1.6rem; font-weight: 700; color: var(--slate-900);">Notifications</h1>
+      <p style="color: var(--slate-500); font-size: 0.9rem;">Keep track of your appointment status updates, confirmations, and reminders.</p>
+    </div>
+    <button type="button" class="btn btn-secondary btn-sm" id="markAllReadPageBtn">
+      <i class="fa-solid fa-check-double"></i> Mark All as Read
+    </button>
+  </div>
+
+  <div class="card">
+    {% if notifications and notifications|length > 0 %}
+      <div style="divide-y: 1px solid var(--slate-100);">
+        {% for n in notifications %}
+          <div style="padding: 1.15rem 1.5rem; display: flex; gap: 1rem; align-items: flex-start; border-bottom: 1px solid var(--slate-100); background: {% if not n.is_read %}var(--primary-50){% else %}white{% endif %};">
+            <div style="width: 40px; height: 40px; border-radius: 50%; background: {% if n.notification_type == 'booking' %}var(--primary-100); color: var(--primary-700);{% elif n.notification_type == 'cancellation' %}#fee2e2; color: #b91c1c;{% elif n.notification_type == 'confirmation' %}#dcfce7; color: #15803d;{% else %}var(--slate-100); color: var(--slate-600);{% endif %} display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0;">
+              {% if n.notification_type == 'booking' %}
+                <i class="fa-solid fa-calendar-plus"></i>
+              {% elif n.notification_type == 'cancellation' %}
+                <i class="fa-solid fa-calendar-xmark"></i>
+              {% elif n.notification_type == 'confirmation' %}
+                <i class="fa-solid fa-calendar-check"></i>
+              {% elif n.notification_type == 'reschedule' %}
+                <i class="fa-solid fa-arrows-rotate"></i>
+              {% else %}
+                <i class="fa-solid fa-bell"></i>
+              {% endif %}
+            </div>
+
+            <div style="flex: 1;">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.25rem;">
+                <h4 style="font-size: 0.95rem; font-weight: 600; color: var(--slate-800);">{{ n.title }}</h4>
+                <span style="font-size: 0.78rem; color: var(--slate-400);">
+                  {{ n.created_at.strftime('%b %d, %Y - %I:%M %p') if n.created_at else '' }}
+                </span>
+              </div>
+              <p style="font-size: 0.88rem; color: var(--slate-600); line-height: 1.5;">{{ n.message }}</p>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <div class="empty-state-icon"><i class="fa-regular fa-bell"></i></div>
+        <h3 class="empty-state-title">No notifications yet</h3>
+        <p class="empty-state-text">You are all caught up! Updates regarding your appointment bookings will appear here.</p>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Pagination -->
+  {% if total_pages > 1 %}
+  <div style="display: flex; justify-content: center; gap: 0.5rem; margin-top: 1.5rem;">
+    {% for p in range(1, total_pages + 1) %}
+      <a href="{{ url_for('notifications.view_notifications', page=p) }}" class="btn btn-sm {% if p == current_page %}btn-primary{% else %}btn-secondary{% endif %}">
+        {{ p }}
+      </a>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
+
+<script>
+document.getElementById('markAllReadPageBtn')?.addEventListener('click', async () => {
+  try {
+    const res = await fetchWithCsrf('/api/notifications/read-all', { method: 'POST' });
+    const data = await res.json();
+    if (data.success) {
+      showToast('All notifications marked as read', 'success');
+      setTimeout(() => window.location.reload(), 600);
+    }
+  } catch(e) {
+    console.error(e);
+  }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,102 @@
+{% extends "base_dashboard.html" %}
+
+{% block title %}Appointment Details - {{ app_name }}{% endblock %}
+{% block page_title %}Appointment Details{% endblock %}
+
+{% block dashboard_content %}
+<div style="max-width: 800px; margin: 0 auto;">
+  <div style="margin-bottom: 1.25rem;">
+    <a href="{{ url_for('patient.my_appointments') }}" class="btn btn-secondary btn-sm">
+      <i class="fa-solid fa-arrow-left"></i> Back to Appointments
+    </a>
+  </div>
+
+  <div class="card">
+    <div class="card-header" style="justify-content: space-between;">
+      <div style="display: flex; align-items: center; gap: 0.75rem;">
+        <span class="badge badge-{{ appointment.status }}" style="font-size: 0.9rem; padding: 0.35rem 0.85rem;">
+          {{ appointment.status }}
+        </span>
+        <span style="font-size: 0.82rem; color: var(--slate-400);">ID: {{ appointment._id }}</span>
+      </div>
+      <div>
+        {% if appointment.status in ['pending', 'confirmed'] %}
+          <button type="button" class="btn btn-secondary btn-sm btn-open-reschedule" data-appointment-id="{{ appointment._id }}" data-doctor-id="{{ appointment.doctor_id }}">
+            <i class="fa-solid fa-arrows-rotate"></i> Reschedule
+          </button>
+          <button type="button" class="btn btn-danger btn-sm btn-open-cancel" data-appointment-id="{{ appointment._id }}">
+            <i class="fa-solid fa-xmark"></i> Cancel Visit
+          </button>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="card-body">
+      <!-- Doctor Snapshot -->
+      <div style="display: flex; gap: 1.25rem; align-items: center; padding-bottom: 1.5rem; border-bottom: 1px solid var(--slate-100); margin-bottom: 1.5rem;">
+        <div class="avatar-circle" style="width: 64px; height: 64px; font-size: 1.6rem;">
+          <i class="fa-solid fa-user-doctor"></i>
+        </div>
+        <div>
+          <h2 style="font-size: 1.3rem; font-weight: 700; color: var(--slate-800);">
+            Dr. {{ doctor.full_name if doctor else 'Healthcare Specialist' }}
+          </h2>
+          <span class="badge badge-confirmed">{{ doctor_profile.specialization if doctor_profile else 'General Medicine' }}</span>
+          <div style="font-size: 0.85rem; color: var(--slate-500); margin-top: 0.25rem;">
+            {{ doctor_profile.qualifications if doctor_profile else 'Medical Practitioner' }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Grid of Details -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem;">
+        <div>
+          <span style="font-size: 0.78rem; text-transform: uppercase; font-weight: 700; color: var(--slate-400);">Consultation Date</span>
+          <p style="font-size: 1.05rem; font-weight: 700; color: var(--slate-900); margin-top: 0.2rem;">
+            <i class="fa-regular fa-calendar" style="color: var(--primary-600);"></i> {{ appointment.appointment_date | format_date }}
+          </p>
+        </div>
+
+        <div>
+          <span style="font-size: 0.78rem; text-transform: uppercase; font-weight: 700; color: var(--slate-400);">Appointment Time Slot</span>
+          <p style="font-size: 1.05rem; font-weight: 700; color: var(--slate-900); margin-top: 0.2rem;">
+            <i class="fa-regular fa-clock" style="color: var(--primary-600);"></i> {{ appointment.start_time | format_time }} - {{ appointment.end_time | format_time }}
+          </p>
+        </div>
+
+        <div>
+          <span style="font-size: 0.78rem; text-transform: uppercase; font-weight: 700; color: var(--slate-400);">Consultation Fee</span>
+          <p style="font-size: 1.15rem; font-weight: 800; color: var(--teal-600); margin-top: 0.2rem;">
+            ₹{{ appointment.consultation_fee }}
+          </p>
+          <span style="font-size: 0.75rem; color: var(--slate-500);">Payable at Clinic Desk</span>
+        </div>
+      </div>
+
+      <!-- Reason for Visit -->
+      <div style="background: var(--slate-50); border: 1px solid var(--slate-200); border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 1.5rem;">
+        <span style="font-size: 0.8rem; font-weight: 700; color: var(--slate-600); text-transform: uppercase; display: block; margin-bottom: 0.4rem;">
+          Reason for Consultation / Reported Symptoms
+        </span>
+        <p style="color: var(--slate-700); font-size: 0.95rem; line-height: 1.5;">
+          {{ appointment.reason_for_visit or 'General wellness checkup and routine consultation.' }}
+        </p>
+      </div>
+
+      {% if appointment.status == 'cancelled' %}
+        <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: var(--radius-md); padding: 1.25rem;">
+          <span style="font-size: 0.8rem; font-weight: 700; color: var(--danger-main); text-transform: uppercase; display: block; margin-bottom: 0.25rem;">
+            <i class="fa-solid fa-ban"></i> Cancellation Record
+          </span>
+          <p style="color: #991b1b; font-size: 0.9rem;">
+            {{ appointment.cancellation_reason or 'No cancellation reason specified.' }}
+          </p>
+          <span style="font-size: 0.75rem; color: #b91c1c; display: block; margin-top: 0.25rem;">
+            Cancelled by: {{ appointment.cancelled_by | capitalize if appointment.cancelled_by else 'User' }}
+          </span>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

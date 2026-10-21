@@ -1,0 +1,215 @@
+{% extends "base.html" %}
+
+{% block layout %}
+<div class="dashboard-container">
+  <!-- Sidebar -->
+  <aside class="dashboard-sidebar" id="dashboardSidebar">
+    <div class="sidebar-header">
+      <a href="{{ url_for('public.index') }}" class="brand-logo" style="font-size: 1.15rem;">
+        <div class="brand-icon" style="width: 32px; height: 32px; font-size: 1rem;"><i class="fa-solid fa-heart-pulse"></i></div>
+        <span>{{ app_name }}</span>
+      </a>
+      <span class="sidebar-role-badge">{{ session.get('user_role', 'user') }}</span>
+    </div>
+
+    <nav class="sidebar-nav">
+      {% set role = session.get('user_role') %}
+      {% if role == 'patient' %}
+        <a href="{{ url_for('patient.dashboard') }}" class="sidebar-link {% if request.endpoint == 'patient.dashboard' %}active{% endif %}">
+          <i class="fa-solid fa-chart-pie"></i>
+          <span>Overview</span>
+        </a>
+        <a href="{{ url_for('patient.book_appointment') }}" class="sidebar-link {% if request.endpoint == 'patient.book_appointment' %}active{% endif %}">
+          <i class="fa-solid fa-calendar-plus"></i>
+          <span>Book Appointment</span>
+        </a>
+        <a href="{{ url_for('patient.my_appointments') }}" class="sidebar-link {% if request.endpoint in ['patient.my_appointments', 'patient.appointment_detail'] %}active{% endif %}">
+          <i class="fa-solid fa-clipboard-list"></i>
+          <span>My Appointments</span>
+        </a>
+        <a href="{{ url_for('patient.calendar_view') }}" class="sidebar-link {% if request.endpoint == 'patient.calendar_view' %}active{% endif %}">
+          <i class="fa-solid fa-calendar-days"></i>
+          <span>My Calendar</span>
+        </a>
+        <a href="{{ url_for('notifications.view_notifications') }}" class="sidebar-link {% if request.endpoint == 'notifications.view_notifications' %}active{% endif %}">
+          <i class="fa-solid fa-bell"></i>
+          <span>Notifications</span>
+        </a>
+        <a href="{{ url_for('patient.profile') }}" class="sidebar-link {% if request.endpoint == 'patient.profile' %}active{% endif %}">
+          <i class="fa-solid fa-user-gear"></i>
+          <span>My Profile</span>
+        </a>
+
+      {% elif role == 'doctor' %}
+        <a href="{{ url_for('doctor.dashboard') }}" class="sidebar-link {% if request.endpoint == 'doctor.dashboard' %}active{% endif %}">
+          <i class="fa-solid fa-chart-pie"></i>
+          <span>Doctor Dashboard</span>
+        </a>
+        <a href="{{ url_for('doctor.calendar_view') }}" class="sidebar-link {% if request.endpoint == 'doctor.calendar_view' %}active{% endif %}">
+          <i class="fa-solid fa-calendar-days"></i>
+          <span>Interactive Calendar</span>
+        </a>
+        <a href="{{ url_for('doctor.appointment_management') }}" class="sidebar-link {% if request.endpoint == 'doctor.appointment_management' %}active{% endif %}">
+          <i class="fa-solid fa-calendar-check"></i>
+          <span>Appointments</span>
+        </a>
+        <a href="{{ url_for('doctor.availability_settings') }}" class="sidebar-link {% if request.endpoint == 'doctor.availability_settings' %}active{% endif %}">
+          <i class="fa-solid fa-clock"></i>
+          <span>Availability & Schedule</span>
+        </a>
+        <a href="{{ url_for('notifications.view_notifications') }}" class="sidebar-link {% if request.endpoint == 'notifications.view_notifications' %}active{% endif %}">
+          <i class="fa-solid fa-bell"></i>
+          <span>Notifications</span>
+        </a>
+        <a href="{{ url_for('doctor.profile') }}" class="sidebar-link {% if request.endpoint == 'doctor.profile' %}active{% endif %}">
+          <i class="fa-solid fa-user-doctor"></i>
+          <span>Doctor Profile</span>
+        </a>
+
+      {% elif role == 'admin' %}
+        <a href="{{ url_for('admin.dashboard') }}" class="sidebar-link {% if request.endpoint == 'admin.dashboard' %}active{% endif %}">
+          <i class="fa-solid fa-chart-line"></i>
+          <span>Admin Overview</span>
+        </a>
+        <a href="{{ url_for('admin.doctor_management') }}" class="sidebar-link {% if request.endpoint == 'admin.doctor_management' %}active{% endif %}">
+          <i class="fa-solid fa-user-doctor"></i>
+          <span>Doctors</span>
+        </a>
+        <a href="{{ url_for('admin.patient_management') }}" class="sidebar-link {% if request.endpoint == 'admin.patient_management' %}active{% endif %}">
+          <i class="fa-solid fa-hospital-user"></i>
+          <span>Patients</span>
+        </a>
+        <a href="{{ url_for('admin.appointment_management') }}" class="sidebar-link {% if request.endpoint == 'admin.appointment_management' %}active{% endif %}">
+          <i class="fa-solid fa-calendar-check"></i>
+          <span>Appointments</span>
+        </a>
+        <a href="{{ url_for('admin.specialization_management') }}" class="sidebar-link {% if request.endpoint == 'admin.specialization_management' %}active{% endif %}">
+          <i class="fa-solid fa-stethoscope"></i>
+          <span>Specializations</span>
+        </a>
+        <a href="{{ url_for('admin.analytics') }}" class="sidebar-link {% if request.endpoint == 'admin.analytics' %}active{% endif %}">
+          <i class="fa-solid fa-chart-pie"></i>
+          <span>Reports & Analytics</span>
+        </a>
+        <a href="{{ url_for('admin.audit_logs') }}" class="sidebar-link {% if request.endpoint == 'admin.audit_logs' %}active{% endif %}">
+          <i class="fa-solid fa-list-check"></i>
+          <span>Audit Logs</span>
+        </a>
+        <a href="{{ url_for('admin.platform_settings') }}" class="sidebar-link {% if request.endpoint == 'admin.platform_settings' %}active{% endif %}">
+          <i class="fa-solid fa-sliders"></i>
+          <span>Platform Settings</span>
+        </a>
+      {% endif %}
+    </nav>
+
+    <div class="sidebar-footer">
+      <a href="{{ url_for('public.index') }}" class="sidebar-link" style="color: var(--slate-500);">
+        <i class="fa-solid fa-arrow-left"></i>
+        <span>Public Portal</span>
+      </a>
+      <a href="{{ url_for('auth.logout') }}" class="sidebar-link" style="color: var(--danger-main);">
+        <i class="fa-solid fa-arrow-right-from-bracket"></i>
+        <span>Sign Out</span>
+      </a>
+    </div>
+  </aside>
+
+  <!-- Main Content Area -->
+  <div class="dashboard-main">
+    <header class="dashboard-topbar">
+      <div class="topbar-left">
+        <button type="button" class="sidebar-toggle-btn" id="sidebarToggle" aria-label="Toggle Navigation">
+          <i class="fa-solid fa-bars"></i>
+        </button>
+        <h2 style="font-size: 1.15rem; font-weight: 700; color: var(--slate-800);">
+          {% block page_title %}Dashboard{% endblock %}
+        </h2>
+      </div>
+
+      <div class="topbar-right">
+        <!-- Live Notifications Dropdown -->
+        <div class="notif-btn-wrapper">
+          <button type="button" class="notif-icon-btn" id="notifBtn" aria-label="Notifications">
+            <i class="fa-solid fa-bell"></i>
+            <span class="notif-counter" id="notifBadge" {% if unread_count == 0 %}style="display: none;"{% endif %}>
+              {{ unread_count }}
+            </span>
+          </button>
+
+          <div class="notif-dropdown" id="notifDropdown">
+            <div class="notif-header">
+              <span style="font-weight: 700; font-size: 0.9rem;">Notifications</span>
+              <button type="button" id="markAllReadBtn" style="background: none; border: none; font-size: 0.78rem; color: var(--primary-600); cursor: pointer; font-weight: 600;">
+                Mark All Read
+              </button>
+            </div>
+            <div class="notif-list" id="notifList">
+              <div style="padding: 20px; text-align: center; color: var(--slate-400); font-size: 0.85rem;">
+                <i class="fa-solid fa-spinner fa-spin"></i> Loading...
+              </div>
+            </div>
+            <div style="padding: 0.5rem; text-align: center; border-top: 1px solid var(--slate-100); background: var(--slate-50);">
+              <a href="{{ url_for('notifications.view_notifications') }}" style="font-size: 0.8rem; font-weight: 600;">
+                View All Notifications &rarr;
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- User Menu Dropdown -->
+        <div class="user-menu-wrapper">
+          <button type="button" class="user-avatar-btn" id="userMenuBtn">
+            <div class="avatar-circle">
+              {{ session.get('user_name', 'U')[0] | upper }}
+            </div>
+            <div class="user-info-text">
+              <div class="user-name-label">{{ session.get('user_name', 'User') }}</div>
+              <div class="user-role-label">{{ session.get('user_role', 'Role') }}</div>
+            </div>
+            <i class="fa-solid fa-chevron-down" style="font-size: 0.75rem; color: var(--slate-400); margin-left: 0.2rem;"></i>
+          </button>
+
+          <div class="dropdown-card" id="userDropdown">
+            <div style="padding: 0.5rem 0.8rem; border-bottom: 1px solid var(--slate-100); margin-bottom: 0.35rem;">
+              <strong style="font-size: 0.88rem; color: var(--slate-800); display: block;">{{ session.get('user_name') }}</strong>
+              <span style="font-size: 0.75rem; color: var(--slate-500);">{{ session.get('user_email') }}</span>
+            </div>
+
+            {% set role = session.get('user_role') %}
+            {% if role == 'patient' %}
+              <a href="{{ url_for('patient.profile') }}" class="dropdown-item">
+                <i class="fa-solid fa-user-gear"></i> Profile Settings
+              </a>
+              <a href="{{ url_for('patient.my_appointments') }}" class="dropdown-item">
+                <i class="fa-solid fa-clipboard-list"></i> My Bookings
+              </a>
+            {% elif role == 'doctor' %}
+              <a href="{{ url_for('doctor.profile') }}" class="dropdown-item">
+                <i class="fa-solid fa-user-doctor"></i> Doctor Profile
+              </a>
+              <a href="{{ url_for('doctor.availability_settings') }}" class="dropdown-item">
+                <i class="fa-solid fa-clock"></i> Schedule Settings
+              </a>
+            {% elif role == 'admin' %}
+              <a href="{{ url_for('admin.platform_settings') }}" class="dropdown-item">
+                <i class="fa-solid fa-sliders"></i> Platform Settings
+              </a>
+            {% endif %}
+
+            <div style="border-top: 1px solid var(--slate-100); margin-top: 0.35rem; padding-top: 0.35rem;">
+              <a href="{{ url_for('auth.logout') }}" class="dropdown-item" style="color: var(--danger-main);">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i> Sign Out
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="dashboard-content">
+      {% include 'shared/_alerts.html' %}
+      {% block dashboard_content %}{% endblock %}
+    </div>
+  </div>
+</div>
+{% endblock layout %}

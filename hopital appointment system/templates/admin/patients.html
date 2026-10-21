@@ -1,0 +1,121 @@
+{% extends "base_dashboard.html" %}
+
+{% block title %}Patient Management - {{ app_name }}{% endblock %}
+{% block page_title %}Patient Account Directory{% endblock %}
+
+{% block dashboard_content %}
+<div class="card">
+  <div class="card-header" style="flex-wrap: wrap; gap: 1rem;">
+    <div style="display: flex; align-items: center; gap: 0.65rem;">
+      <i class="fa-solid fa-hospital-user" style="color: var(--primary-600); font-size: 1.2rem;"></i>
+      <h3 class="card-title">Registered Patients ({{ total }})</h3>
+    </div>
+  </div>
+
+  <!-- Search & Filter Bar -->
+  <div style="background: var(--slate-50); border-bottom: 1px solid var(--slate-200); padding: 1rem 1.5rem;">
+    <form action="{{ url_for('admin.patient_management') }}" method="GET" style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+      <div style="flex: 1; min-width: 220px;">
+        <input type="text" name="search" class="form-control" placeholder="Search patient name, email, or phone..." value="{{ search }}">
+      </div>
+
+      <div style="width: 160px;">
+        <select name="status" class="form-select">
+          <option value="all">All Statuses</option>
+          <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
+          <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive</option>
+        </select>
+      </div>
+
+      <button type="submit" class="btn btn-secondary btn-sm"><i class="fa-solid fa-filter"></i> Filter</button>
+      {% if search or status_filter != 'all' %}
+        <a href="{{ url_for('admin.patient_management') }}" class="btn btn-secondary btn-sm">Clear</a>
+      {% endif %}
+    </form>
+  </div>
+
+  <div class="card-body" style="padding: 0;">
+    {% if patients and patients|length > 0 %}
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Patient Name</th>
+              <th>Contact Details</th>
+              <th>Booked Consultations</th>
+              <th>Registered Date</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for pat in patients %}
+              <tr>
+                <td>
+                  <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <div class="avatar-circle" style="width: 36px; height: 36px; font-size: 0.9rem; background: var(--slate-700);">
+                      {{ pat.full_name[0] | upper }}
+                    </div>
+                    <strong>{{ pat.full_name }}</strong>
+                  </div>
+                </td>
+                <td>
+                  <div><i class="fa-regular fa-envelope"></i> {{ pat.email }}</div>
+                  <div style="font-size: 0.8rem; color: var(--slate-500);"><i class="fa-solid fa-phone"></i> {{ pat.phone }}</div>
+                </td>
+                <td>
+                  <span class="badge badge-confirmed" style="font-size: 0.8rem;">
+                    {{ pat.appointment_count }} Appointments
+                  </span>
+                </td>
+                <td style="font-size: 0.82rem; color: var(--slate-500);">
+                  {{ pat.created_at.strftime('%b %d, %Y') if pat.created_at else '' }}
+                </td>
+                <td>
+                  {% if pat.account_status == 'active' %}
+                    <span class="badge badge-completed">Active</span>
+                  {% else %}
+                    <span class="badge badge-cancelled">Inactive</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <form action="{{ url_for('admin.toggle_patient_status', patient_id=pat._id) }}" method="POST" style="display: inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    {% if pat.account_status == 'active' %}
+                      <button type="submit" class="btn btn-danger btn-sm" title="Deactivate Patient" onclick="return confirm('Deactivate this patient account?')">
+                        <i class="fa-solid fa-user-slash"></i> Deactivate
+                      </button>
+                    {% else %}
+                      <button type="submit" class="btn btn-success btn-sm" title="Activate Patient">
+                        <i class="fa-solid fa-user-check"></i> Activate
+                      </button>
+                    {% endif %}
+                  </form>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      {% if total_pages > 1 %}
+        <div style="padding: 1.25rem; display: flex; justify-content: center; gap: 0.5rem; border-top: 1px solid var(--slate-100);">
+          {% for p in range(1, total_pages + 1) %}
+            <a href="{{ url_for('admin.patient_management', search=search, status=status_filter, page=p) }}" class="btn btn-sm {% if p == current_page %}btn-primary{% else %}btn-secondary{% endif %}">
+              {{ p }}
+            </a>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+    {% else %}
+      <div class="empty-state">
+        <div class="empty-state-icon"><i class="fa-solid fa-hospital-user"></i></div>
+        <h3 class="empty-state-title">No patients found</h3>
+        <p class="empty-state-text">No patient accounts matched your search terms.</p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

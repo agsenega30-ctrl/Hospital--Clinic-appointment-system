@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}Patient & Doctor Registration - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div style="min-height: 80vh; display: flex; align-items: center; justify-content: center; padding: 2.5rem 1rem;">
+  <div class="card" style="max-width: 520px; width: 100%; box-shadow: var(--shadow-xl); border: 1px solid var(--slate-200); border-radius: var(--radius-xl);">
+    <div style="padding: 2.5rem 2.5rem 1.25rem; text-align: center;">
+      <div class="brand-icon" style="margin: 0 auto 1rem; width: 48px; height: 48px; font-size: 1.5rem;">
+        <i class="fa-solid fa-user-plus"></i>
+      </div>
+      <h2 style="font-size: 1.6rem; font-weight: 800; color: var(--slate-900);">Create an Account</h2>
+      <p style="color: var(--slate-500); font-size: 0.88rem; margin-top: 0.25rem;">
+        Join Antigravity Care to schedule and manage medical appointments online
+      </p>
+    </div>
+
+    <div style="padding: 0 2.5rem 2.5rem;">
+      <form action="{{ url_for('auth.register') }}" method="POST" id="regForm">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="form-group">
+          <label class="form-label">I am registering as:</label>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+            <label style="border: 1.5px solid var(--primary-600); background: var(--primary-50); padding: 0.75rem; border-radius: var(--radius-md); display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.9rem; font-weight: 600; color: var(--primary-700);" id="patientRoleCard">
+              <input type="radio" name="role" value="patient" checked onchange="toggleDoctorFields(false)">
+              <i class="fa-solid fa-user"></i> Patient
+            </label>
+            <label style="border: 1.5px solid var(--slate-300); background: white; padding: 0.75rem; border-radius: var(--radius-md); display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.9rem; font-weight: 600; color: var(--slate-700);" id="doctorRoleCard">
+              <input type="radio" name="role" value="doctor" onchange="toggleDoctorFields(true)">
+              <i class="fa-solid fa-user-doctor"></i> Doctor
+            </label>
+          </div>
+          <span class="form-hint" id="doctorNote" style="display: none; color: var(--warning-text); background: var(--warning-bg); padding: 0.5rem; border-radius: var(--radius-sm); margin-top: 0.5rem;">
+            <i class="fa-solid fa-circle-info"></i> Note: Doctor registrations require administrative approval before consultations can be scheduled.
+          </span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label"><i class="fa-solid fa-user"></i> Full Legal Name</label>
+          <input type="text" name="full_name" class="form-control" placeholder="e.g. Ananya Sharma" value="{{ full_name or '' }}" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label"><i class="fa-solid fa-envelope"></i> Email Address</label>
+          <input type="email" name="email" class="form-control" placeholder="name@example.com" value="{{ email or '' }}" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label"><i class="fa-solid fa-phone"></i> Contact Phone</label>
+          <input type="tel" name="phone" class="form-control" placeholder="+91 98765 43210" value="{{ phone or '' }}" required>
+        </div>
+
+        <div id="doctorFields" style="display: none;">
+          <div class="form-group">
+            <label class="form-label"><i class="fa-solid fa-stethoscope"></i> Medical Specialization</label>
+            <select name="specialization" class="form-select">
+              {% for s in specializations %}
+                <option value="{{ s.name }}">{{ s.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label class="form-label"><i class="fa-solid fa-lock"></i> Password</label>
+            <input type="password" name="password" id="regPassword" class="form-control" placeholder="Min 6 chars" required minlength="6">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label"><i class="fa-solid fa-lock"></i> Confirm</label>
+            <input type="password" name="confirm_password" id="regConfirmPassword" class="form-control" placeholder="Repeat password" required minlength="6">
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.75rem; font-size: 0.95rem; margin-top: 0.5rem;">
+          <i class="fa-solid fa-check"></i> Complete Registration
+        </button>
+      </form>
+
+      <div style="text-align: center; margin-top: 1.5rem; font-size: 0.88rem; color: var(--slate-600);">
+        Already have an account?
+        <a href="{{ url_for('auth.login') }}" style="font-weight: 600;">Sign In</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function toggleDoctorFields(isDoctor) {
+  const fields = document.getElementById('doctorFields');
+  const note = document.getElementById('doctorNote');
+  const patCard = document.getElementById('patientRoleCard');
+  const docCard = document.getElementById('doctorRoleCard');
+
+  if (isDoctor) {
+    fields.style.display = 'block';
+    note.style.display = 'block';
+    docCard.style.borderColor = 'var(--primary-600)';
+    docCard.style.background = 'var(--primary-50)';
+    docCard.style.color = 'var(--primary-700)';
+
+    patCard.style.borderColor = 'var(--slate-300)';
+    patCard.style.background = 'white';
+    patCard.style.color = 'var(--slate-700)';
+  } else {
+    fields.style.display = 'none';
+    note.style.display = 'none';
+    patCard.style.borderColor = 'var(--primary-600)';
+    patCard.style.background = 'var(--primary-50)';
+    patCard.style.color = 'var(--primary-700)';
+
+    docCard.style.borderColor = 'var(--slate-300)';
+    docCard.style.background = 'white';
+    docCard.style.color = 'var(--slate-700)';
+  }
+}
+
+document.getElementById('regForm').addEventListener('submit', function(e) {
+  const p1 = document.getElementById('regPassword').value;
+  const p2 = document.getElementById('regConfirmPassword').value;
+  if (p1 !== p2) {
+    e.preventDefault();
+    alert('Passwords do not match. Please re-enter.');
+  }
+});
+</script>
+{% endblock %}

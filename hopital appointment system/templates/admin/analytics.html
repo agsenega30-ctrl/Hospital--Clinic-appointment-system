@@ -1,0 +1,144 @@
+{% extends "base_dashboard.html" %}
+
+{% block title %}Hospital Analytics & Reports - {{ app_name }}{% endblock %}
+{% block page_title %}Clinical Reports & Analytics{% endblock %}
+
+{% block dashboard_content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+  <div>
+    <h3 style="font-size: 1.4rem; font-weight: 700; color: var(--slate-900);">Clinical Analytics & Insights</h3>
+    <p style="color: var(--slate-500); font-size: 0.88rem;">Monitor hospital appointment volumes, department distribution, and status transitions.</p>
+  </div>
+  <button type="button" class="btn btn-secondary btn-sm" onclick="window.location.reload()">
+    <i class="fa-solid fa-arrows-rotate"></i> Refresh Data
+  </button>
+</div>
+
+<!-- Charts Grid -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+  <!-- Chart 1: Status Distribution -->
+  <div class="card" style="margin-bottom: 0;">
+    <div class="card-header">
+      <h4 class="card-title"><i class="fa-solid fa-chart-pie" style="color: var(--primary-600);"></i> Appointment Status Breakdown</h4>
+    </div>
+    <div class="card-body" style="height: 320px; display: flex; align-items: center; justify-content: center;">
+      <canvas id="detailedStatusChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Chart 2: By Department -->
+  <div class="card" style="margin-bottom: 0;">
+    <div class="card-header">
+      <h4 class="card-title"><i class="fa-solid fa-chart-column" style="color: var(--teal-600);"></i> Consultations by Medical Department</h4>
+    </div>
+    <div class="card-body" style="height: 320px; display: flex; align-items: center; justify-content: center;">
+      <canvas id="specializationChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- Chart 3: Monthly Volume Trends -->
+<div class="card">
+  <div class="card-header">
+    <h4 class="card-title"><i class="fa-solid fa-chart-line" style="color: var(--primary-700);"></i> Booking Volume Trends (6-Month History)</h4>
+  </div>
+  <div class="card-body" style="height: 320px;">
+    <canvas id="detailedMonthlyChart"></canvas>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+  try {
+    const res = await fetch('/api/analytics/charts');
+    const data = await res.json();
+
+    // 1. Status Donut
+    const ctx1 = document.getElementById('detailedStatusChart');
+    if (ctx1 && data.status_counts) {
+      new Chart(ctx1, {
+        type: 'doughnut',
+        data: {
+          labels: ['Pending Requests', 'Confirmed Visits', 'Completed Consultations', 'Cancellations'],
+          datasets: [{
+            data: [
+              data.status_counts.pending || 0,
+              data.status_counts.confirmed || 0,
+              data.status_counts.completed || 0,
+              data.status_counts.cancelled || 0
+            ],
+            backgroundColor: ['#d97706', '#0284c7', '#16a34a', '#94a3b8'],
+            borderWidth: 2,
+            borderColor: '#ffffff'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: 'bottom' } }
+        }
+      });
+    }
+
+    // 2. Department Bar Chart
+    const ctx2 = document.getElementById('specializationChart');
+    if (ctx2 && data.specialization_counts) {
+      const labels = Object.keys(data.specialization_counts);
+      const values = Object.values(data.specialization_counts);
+
+      new Chart(ctx2, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Appointments',
+            data: values,
+            backgroundColor: 'rgba(14, 165, 233, 0.75)',
+            borderColor: '#0284c7',
+            borderWidth: 1.5,
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+        }
+      });
+    }
+
+    // 3. Monthly Volume Line Chart
+    const ctx3 = document.getElementById('detailedMonthlyChart');
+    if (ctx3 && data.monthly_counts) {
+      const labels = Object.keys(data.monthly_counts);
+      const values = Object.values(data.monthly_counts);
+
+      new Chart(ctx3, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Total Consultations',
+            data: values,
+            borderColor: '#0369a1',
+            backgroundColor: 'rgba(3, 105, 161, 0.12)',
+            fill: true,
+            tension: 0.35,
+            pointRadius: 5,
+            pointBackgroundColor: '#0369a1'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+        }
+      });
+    }
+  } catch (err) {
+    console.error('Analytics charts error:', err);
+  }
+});
+</script>
+{% endblock %}

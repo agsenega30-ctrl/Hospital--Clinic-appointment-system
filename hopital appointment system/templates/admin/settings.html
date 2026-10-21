@@ -1,0 +1,88 @@
+{% extends "base_dashboard.html" %}
+
+{% block title %}Platform Settings - {{ app_name }}{% endblock %}
+{% block page_title %}Platform & System Settings{% endblock %}
+
+{% block dashboard_content %}
+<div style="max-width: 800px; margin: 0 auto;">
+  <div class="card">
+    <div class="card-header">
+      <div style="display: flex; align-items: center; gap: 0.65rem;">
+        <i class="fa-solid fa-sliders" style="color: var(--primary-600); font-size: 1.2rem;"></i>
+        <h3 class="card-title">Hospital Platform Configurations</h3>
+      </div>
+    </div>
+
+    <div class="card-body">
+      <form action="{{ url_for('admin.platform_settings') }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <!-- Hospital Info -->
+        <h4 style="font-size: 1rem; font-weight: 700; color: var(--slate-800); margin-bottom: 0.85rem;">
+          <i class="fa-solid fa-hospital" style="color: var(--primary-600);"></i> Clinic Identity & Contact
+        </h4>
+
+        <div class="form-group">
+          <label class="form-label">Hospital / Clinic Name</label>
+          <input type="text" name="hospital_name" class="form-control" value="{{ settings.hospital_name }}" required>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;">
+          <div class="form-group">
+            <label class="form-label">Support Email Address</label>
+            <input type="email" name="contact_email" class="form-control" value="{{ settings.contact_email }}" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Support / Emergency Phone</label>
+            <input type="text" name="contact_phone" class="form-control" value="{{ settings.contact_phone }}" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Physical Campus Address</label>
+          <input type="text" name="address" class="form-control" value="{{ settings.address }}" required>
+        </div>
+
+        <!-- Scheduling Rules -->
+        <div style="border-top: 1px solid var(--slate-100); padding-top: 1.5rem; margin-top: 1.5rem;">
+          <h4 style="font-size: 1rem; font-weight: 700; color: var(--slate-800); margin-bottom: 0.85rem;">
+            <i class="fa-solid fa-business-time" style="color: var(--teal-600);"></i> Appointment & Access Rules
+          </h4>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;">
+            <div class="form-group">
+              <label class="form-label">Cancellation Notice (Hours)</label>
+              <input type="number" min="0" max="72" name="cancellation_lead_hours" class="form-control" value="{{ settings.cancellation_lead_hours }}" required>
+              <span class="form-hint">Hours before appointment when patient cancellation is permitted.</span>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Max Advance Booking (Days)</label>
+              <input type="number" min="7" max="180" name="max_advance_booking_days" class="form-control" value="{{ settings.max_advance_booking_days }}" required>
+              <span class="form-hint">Furthest advance date patients can schedule a future consultation.</span>
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-top: 0.5rem;">
+            <label style="display: flex; align-items: center; gap: 0.65rem; background: var(--slate-50); border: 1px solid var(--slate-200); padding: 0.85rem 1rem; border-radius: var(--radius-md); cursor: pointer;">
+              <input type="checkbox" name="allow_doctor_self_registration" {% if settings.allow_doctor_self_registration %}checked{% endif %}>
+              <div>
+                <strong style="color: var(--slate-800); font-size: 0.92rem; display: block;">Allow Doctor Self-Registration</strong>
+                <span style="font-size: 0.78rem; color: var(--slate-500);">
+                  When enabled, medical practitioners can register directly on the public registration page (requires admin verification).
+                </span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div style="border-top: 1px solid var(--slate-100); padding-top: 1.5rem; margin-top: 1.5rem; display: flex; justify-content: flex-end;">
+          <button type="submit" class="btn btn-primary">
+            <i class="fa-solid fa-floppy-disk"></i> Save System Settings
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

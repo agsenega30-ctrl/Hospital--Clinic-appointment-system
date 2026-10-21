@@ -1,0 +1,132 @@
+{% extends "base_dashboard.html" %}
+
+{% block title %}Master Appointments - {{ app_name }}{% endblock %}
+{% block page_title %}Master Appointment Directory{% endblock %}
+
+{% block dashboard_content %}
+<div class="card">
+  <div class="card-header" style="flex-wrap: wrap; gap: 1rem;">
+    <div style="display: flex; align-items: center; gap: 0.65rem;">
+      <i class="fa-solid fa-calendar-check" style="color: var(--primary-600); font-size: 1.2rem;"></i>
+      <h3 class="card-title">Hospital Consultation Records ({{ total }})</h3>
+    </div>
+  </div>
+
+  <!-- Multi-Filter Bar -->
+  <div style="background: var(--slate-50); border-bottom: 1px solid var(--slate-200); padding: 1rem 1.5rem;">
+    <form action="{{ url_for('admin.appointment_management') }}" method="GET" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) 100px; gap: 0.75rem; align-items: flex-end;">
+      <div>
+        <label class="form-label" style="font-size: 0.78rem;">Consultation Date</label>
+        <input type="date" name="date" class="form-control" value="{{ date_filter }}">
+      </div>
+
+      <div>
+        <label class="form-label" style="font-size: 0.78rem;">Status</label>
+        <select name="status" class="form-select">
+          <option value="all">All Statuses</option>
+          <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+          <option value="confirmed" {% if status_filter == 'confirmed' %}selected{% endif %}>Confirmed</option>
+          <option value="completed" {% if status_filter == 'completed' %}selected{% endif %}>Completed</option>
+          <option value="cancelled" {% if status_filter == 'cancelled' %}selected{% endif %}>Cancelled</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="form-label" style="font-size: 0.78rem;">Doctor</label>
+        <select name="doctor_id" class="form-select">
+          <option value="">All Doctors</option>
+          {% for doc in doctors %}
+            <option value="{{ doc._id }}" {% if doctor_filter == (doc._id|string) %}selected{% endif %}>
+              Dr. {{ doc.full_name }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <button type="submit" class="btn btn-secondary btn-sm" style="height: 38px;">
+        <i class="fa-solid fa-filter"></i> Filter
+      </button>
+    </form>
+  </div>
+
+  <div class="card-body" style="padding: 0;">
+    {% if appointments and appointments|length > 0 %}
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Patient</th>
+              <th>Doctor</th>
+              <th>Date & Time</th>
+              <th>Fee</th>
+              <th>Status</th>
+              <th>Reason / Details</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for app in appointments %}
+              <tr>
+                <td>
+                  <strong>{{ app.patient.full_name if app.patient else 'Patient' }}</strong>
+                  <div style="font-size: 0.78rem; color: var(--slate-500);">{{ app.patient.phone if app.patient else '' }}</div>
+                </td>
+                <td>
+                  <strong>Dr. {{ app.doctor.full_name if app.doctor else 'Doctor' }}</strong>
+                </td>
+                <td>
+                  <div>{{ app.appointment_date | format_date }}</div>
+                  <div style="font-size: 0.8rem; color: var(--slate-500);">{{ app.start_time | format_time }} - {{ app.end_time | format_time }}</div>
+                </td>
+                <td>
+                  <strong>₹{{ app.consultation_fee }}</strong>
+                </td>
+                <td>
+                  <span class="badge badge-{{ app.status }}">{{ app.status }}</span>
+                </td>
+                <td>
+                  <span style="font-size: 0.85rem; color: var(--slate-700);">
+                    {{ app.reason_for_visit or 'General Consultation' }}
+                  </span>
+                  {% if app.status == 'cancelled' and app.cancellation_reason %}
+                    <div style="font-size: 0.75rem; color: var(--danger-main);">
+                      Reason: {{ app.cancellation_reason }}
+                    </div>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if app.status in ['pending', 'confirmed'] %}
+                    <button type="button" class="btn btn-danger btn-sm btn-open-cancel" data-appointment-id="{{ app._id }}" title="Cancel as Admin">
+                      <i class="fa-solid fa-ban"></i>
+                    </button>
+                  {% else %}
+                    <span style="color: var(--slate-400); font-size: 0.8rem;">-</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      {% if total_pages > 1 %}
+        <div style="padding: 1.25rem; display: flex; justify-content: center; gap: 0.5rem; border-top: 1px solid var(--slate-100);">
+          {% for p in range(1, total_pages + 1) %}
+            <a href="{{ url_for('admin.appointment_management', date=date_filter, status=status_filter, doctor_id=doctor_filter, page=p) }}" class="btn btn-sm {% if p == current_page %}btn-primary{% else %}btn-secondary{% endif %}">
+              {{ p }}
+            </a>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+    {% else %}
+      <div class="empty-state">
+        <div class="empty-state-icon"><i class="fa-regular fa-calendar-xmark"></i></div>
+        <h3 class="empty-state-title">No appointments found</h3>
+        <p class="empty-state-text">No consultation records match the specified filters.</p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

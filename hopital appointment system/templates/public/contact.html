@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}Contact Us & Hospital Support - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div style="max-width: 1100px; margin: 3rem auto; padding: 0 1.5rem;">
+  <div style="text-align: center; margin-bottom: 3rem;">
+    <h1 style="font-size: 2.2rem; font-weight: 800; color: var(--slate-900);">Contact Healthcare Support</h1>
+    <p style="color: var(--slate-500); font-size: 1rem; max-width: 600px; margin: 0.5rem auto 0;">
+      Have a question regarding doctor appointments, patient registration, or clinic services? Our care desk is here to assist.
+    </p>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 2rem;">
+    <!-- Contact Info Cards -->
+    <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+      <div class="card" style="padding: 1.5rem; margin-bottom: 0;">
+        <div style="display: flex; gap: 1rem; align-items: flex-start;">
+          <div style="width: 44px; height: 44px; border-radius: var(--radius-md); background: var(--primary-100); color: var(--primary-700); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0;">
+            <i class="fa-solid fa-phone"></i>
+          </div>
+          <div>
+            <h4 style="font-weight: 700; color: var(--slate-800); margin-bottom: 0.2rem;">Appointment Desk & Emergency</h4>
+            <p style="color: var(--slate-600); font-size: 0.9rem;">+91 80 2345 6789 / +91 80 2345 6790</p>
+            <span style="font-size: 0.78rem; color: var(--slate-400);">Available 24 Hours a Day, 7 Days a Week</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="padding: 1.5rem; margin-bottom: 0;">
+        <div style="display: flex; gap: 1rem; align-items: flex-start;">
+          <div style="width: 44px; height: 44px; border-radius: var(--radius-md); background: #ccfbf1; color: var(--teal-600); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0;">
+            <i class="fa-solid fa-envelope"></i>
+          </div>
+          <div>
+            <h4 style="font-weight: 700; color: var(--slate-800); margin-bottom: 0.2rem;">Email Support</h4>
+            <p style="color: var(--slate-600); font-size: 0.9rem;">care@antigravityhospital.com</p>
+            <span style="font-size: 0.78rem; color: var(--slate-400);">Expected response within 2-4 business hours</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="padding: 1.5rem; margin-bottom: 0;">
+        <div style="display: flex; gap: 1rem; align-items: flex-start;">
+          <div style="width: 44px; height: 44px; border-radius: var(--radius-md); background: #fef3c7; color: #b45309; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0;">
+            <i class="fa-solid fa-location-dot"></i>
+          </div>
+          <div>
+            <h4 style="font-weight: 700; color: var(--slate-800); margin-bottom: 0.2rem;">Hospital Campus</h4>
+            <p style="color: var(--slate-600); font-size: 0.9rem;">42 Health Sciences Avenue, Bangalore, Karnataka 560001</p>
+            <span style="font-size: 0.78rem; color: var(--slate-400);">Main Medical Tower, Entrance Gate 2</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contact Form -->
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title"><i class="fa-solid fa-paper-plane" style="color: var(--primary-600);"></i> Send Us an Inquiry</h3>
+      </div>
+      <div class="card-body">
+        <form action="{{ url_for('public.contact') }}" method="POST">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+          <div class="form-group">
+            <label class="form-label">Full Name</label>
+            <input type="text" name="name" class="form-control" placeholder="John Doe" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Email Address</label>
+            <input type="email" name="email" class="form-control" placeholder="john@example.com" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Subject</label>
+            <input type="text" name="subject" class="form-control" placeholder="Appointment clarification, test report, etc." required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Message</label>
+            <textarea name="message" class="form-control" rows="4" placeholder="How can our clinical support team help you today?" required></textarea>
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.75rem;">
+            <i class="fa-solid fa-paper-plane"></i> Submit Inquiry
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,78 @@
+{% extends "base_dashboard.html" %}
+
+{% block title %}Patient Profile - {{ app_name }}{% endblock %}
+{% block page_title %}My Profile{% endblock %}
+
+{% block dashboard_content %}
+<div style="max-width: 700px; margin: 0 auto;">
+  <div class="card">
+    <div class="card-header">
+      <div style="display: flex; align-items: center; gap: 0.65rem;">
+        <i class="fa-solid fa-user-gear" style="color: var(--primary-600); font-size: 1.2rem;"></i>
+        <h3 class="card-title">Personal Information & Security</h3>
+      </div>
+    </div>
+
+    <div class="card-body">
+      <form action="{{ url_for('patient.profile') }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div style="display: flex; align-items: center; gap: 1.25rem; margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--slate-100);">
+          <div class="avatar-circle" style="width: 70px; height: 70px; font-size: 1.8rem;">
+            {{ user.full_name[0] | upper }}
+          </div>
+          <div>
+            <h3 style="font-size: 1.2rem; font-weight: 700; color: var(--slate-800);">{{ user.full_name }}</h3>
+            <span class="badge badge-confirmed">Registered Patient</span>
+            <div style="font-size: 0.82rem; color: var(--slate-400); margin-top: 0.2rem;">
+              Member since: {{ user.created_at.strftime('%B %Y') if user.created_at else '2026' }}
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label"><i class="fa-solid fa-user"></i> Full Legal Name</label>
+          <input type="text" name="full_name" class="form-control" value="{{ user.full_name }}" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label"><i class="fa-solid fa-envelope"></i> Email Address (Read-only)</label>
+          <input type="email" class="form-control" value="{{ user.email }}" disabled style="background: var(--slate-100); color: var(--slate-500);">
+          <span class="form-hint">Email address is linked to your authentication records and cannot be altered directly.</span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label"><i class="fa-solid fa-phone"></i> Phone Number</label>
+          <input type="tel" name="phone" class="form-control" value="{{ user.phone }}" required>
+        </div>
+
+        <!-- Password Change Section -->
+        <div style="margin-top: 2rem; border-top: 1px solid var(--slate-100); padding-top: 1.5rem;">
+          <h4 style="font-size: 1.05rem; font-weight: 700; color: var(--slate-800); margin-bottom: 0.5rem;">
+            Change Password
+          </h4>
+          <p style="font-size: 0.85rem; color: var(--slate-500); margin-bottom: 1.25rem;">
+            Leave these fields empty if you do not wish to update your current password.
+          </p>
+
+          <div class="form-group">
+            <label class="form-label">Current Password</label>
+            <input type="password" name="current_password" class="form-control" placeholder="Enter existing password">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">New Password (Min 6 Characters)</label>
+            <input type="password" name="new_password" class="form-control" placeholder="Enter new password" minlength="6">
+          </div>
+        </div>
+
+        <div style="border-top: 1px solid var(--slate-100); padding-top: 1.5rem; margin-top: 1.5rem; display: flex; justify-content: flex-end;">
+          <button type="submit" class="btn btn-primary">
+            <i class="fa-solid fa-floppy-disk"></i> Save Profile Changes
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

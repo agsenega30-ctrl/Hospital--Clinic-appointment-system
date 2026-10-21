@@ -1,0 +1,195 @@
+{% extends "base_dashboard.html" %}
+
+{% block title %}Doctor Management - {{ app_name }}{% endblock %}
+{% block page_title %}Doctor Account Management{% endblock %}
+
+{% block dashboard_content %}
+<div class="card">
+  <div class="card-header" style="flex-wrap: wrap; gap: 1rem;">
+    <div style="display: flex; align-items: center; gap: 0.65rem;">
+      <i class="fa-solid fa-user-doctor" style="color: var(--primary-600); font-size: 1.2rem;"></i>
+      <h3 class="card-title">Manage Medical Staff & Doctors</h3>
+    </div>
+    <button type="button" class="btn btn-primary btn-sm" onclick="openModal('addDoctorModal')">
+      <i class="fa-solid fa-user-plus"></i> Add New Doctor
+    </button>
+  </div>
+
+  <!-- Search & Filter Bar -->
+  <div style="background: var(--slate-50); border-bottom: 1px solid var(--slate-200); padding: 1rem 1.5rem;">
+    <form action="{{ url_for('admin.doctor_management') }}" method="GET" style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+      <div style="flex: 1; min-width: 200px;">
+        <input type="text" name="search" class="form-control" placeholder="Search by doctor name or email..." value="{{ search }}">
+      </div>
+
+      <div style="width: 180px;">
+        <select name="status" class="form-select">
+          <option value="all">All Statuses</option>
+          <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
+          <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive</option>
+          <option value="pending_approval" {% if status_filter == 'pending_approval' %}selected{% endif %}>Pending Approval</option>
+        </select>
+      </div>
+
+      <button type="submit" class="btn btn-secondary btn-sm"><i class="fa-solid fa-filter"></i> Filter</button>
+      {% if search or status_filter != 'all' %}
+        <a href="{{ url_for('admin.doctor_management') }}" class="btn btn-secondary btn-sm" title="Clear Filters">Clear</a>
+      {% endif %}
+    </form>
+  </div>
+
+  <div class="card-body" style="padding: 0;">
+    {% if doctors and doctors|length > 0 %}
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Doctor Name & Email</th>
+              <th>Specialization</th>
+              <th>Qualifications & Exp</th>
+              <th>Fee</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for doc in doctors %}
+              <tr>
+                <td>
+                  <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <div class="avatar-circle" style="width: 38px; height: 38px; font-size: 0.95rem;">
+                      {{ doc.full_name[0] | upper }}
+                    </div>
+                    <div>
+                      <strong>Dr. {{ doc.full_name }}</strong>
+                      <div style="font-size: 0.78rem; color: var(--slate-500);">{{ doc.email }} &bull; {{ doc.phone }}</div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <span class="badge badge-confirmed">{{ doc.profile.specialization }}</span>
+                </td>
+                <td>
+                  <div>{{ doc.profile.qualifications }}</div>
+                  <span style="font-size: 0.78rem; color: var(--slate-500);">{{ doc.profile.experience_years }} Years Practice</span>
+                </td>
+                <td>
+                  <strong style="color: var(--teal-600);">₹{{ doc.profile.consultation_fee }}</strong>
+                </td>
+                <td>
+                  {% if doc.account_status == 'active' %}
+                    <span class="badge badge-completed">Active</span>
+                  {% elif doc.account_status == 'pending_approval' %}
+                    <span class="badge badge-pending">Pending Approval</span>
+                  {% else %}
+                    <span class="badge badge-cancelled">Inactive</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <div style="display: flex; gap: 0.35rem;">
+                    {% if doc.account_status == 'pending_approval' %}
+                      <form action="{{ url_for('admin.doctor_management') }}" method="POST" style="display: inline;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="action" value="approve">
+                        <input type="hidden" name="user_id" value="{{ doc._id }}">
+                        <button type="submit" class="btn btn-success btn-sm" title="Approve Registration"><i class="fa-solid fa-check"></i></button>
+                      </form>
+                      <form action="{{ url_for('admin.doctor_management') }}" method="POST" style="display: inline;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="action" value="reject">
+                        <input type="hidden" name="user_id" value="{{ doc._id }}">
+                        <button type="submit" class="btn btn-danger btn-sm" title="Reject"><i class="fa-solid fa-xmark"></i></button>
+                      </form>
+                    {% elif doc.account_status == 'active' %}
+                      <form action="{{ url_for('admin.doctor_management') }}" method="POST" style="display: inline;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="action" value="deactivate">
+                        <input type="hidden" name="user_id" value="{{ doc._id }}">
+                        <button type="submit" class="btn btn-danger btn-sm" title="Deactivate Account" onclick="return confirm('Deactivate this doctor account?')">
+                          <i class="fa-solid fa-user-slash"></i>
+                        </button>
+                      </form>
+                    {% else %}
+                      <form action="{{ url_for('admin.doctor_management') }}" method="POST" style="display: inline;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="action" value="activate">
+                        <input type="hidden" name="user_id" value="{{ doc._id }}">
+                        <button type="submit" class="btn btn-success btn-sm" title="Activate Account">
+                          <i class="fa-solid fa-user-check"></i>
+                        </button>
+                      </form>
+                    {% endif %}
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <div class="empty-state-icon"><i class="fa-solid fa-user-doctor"></i></div>
+        <h3 class="empty-state-title">No doctor accounts found</h3>
+        <p class="empty-state-text">No doctors matched your search criteria. Add a doctor or clear search.</p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Modal: Add New Doctor -->
+<div class="modal-backdrop" id="addDoctorModal">
+  <div class="modal-content" style="max-width: 550px;">
+    <div class="modal-header">
+      <h3 class="modal-title"><i class="fa-solid fa-user-plus" style="color: var(--primary-600);"></i> Create Doctor Account</h3>
+      <button type="button" class="modal-close-btn" onclick="closeModal('addDoctorModal')">&times;</button>
+    </div>
+    <form action="{{ url_for('admin.doctor_management') }}" method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="action" value="create">
+
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Full Name</label>
+          <input type="text" name="full_name" class="form-control" placeholder="Dr. John Smith" required>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label class="form-label">Email Address</label>
+            <input type="email" name="email" class="form-control" placeholder="john.smith@hospital.com" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Initial Password</label>
+            <input type="password" name="password" class="form-control" placeholder="Min 6 characters" required minlength="6">
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label class="form-label">Phone</label>
+            <input type="tel" name="phone" class="form-control" placeholder="+91 98765 43210" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Consultation Fee (₹)</label>
+            <input type="number" step="50" min="0" name="consultation_fee" class="form-control" value="600" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Department / Specialization</label>
+          <select name="specialization" class="form-select" required>
+            {% for s in specializations %}
+              <option value="{{ s.name }}">{{ s.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('addDoctorModal')">Cancel</button>
+        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-check"></i> Create Doctor Account</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

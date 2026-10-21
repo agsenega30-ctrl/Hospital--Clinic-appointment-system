@@ -1,0 +1,109 @@
+{% extends "base_dashboard.html" %}
+
+{% block title %}Doctor Professional Profile - {{ app_name }}{% endblock %}
+{% block page_title %}Doctor Profile Settings{% endblock %}
+
+{% block dashboard_content %}
+<div style="max-width: 800px; margin: 0 auto;">
+  <div class="card">
+    <div class="card-header">
+      <div style="display: flex; align-items: center; gap: 0.65rem;">
+        <i class="fa-solid fa-user-doctor" style="color: var(--teal-600); font-size: 1.2rem;"></i>
+        <h3 class="card-title">Professional Credentials & Practice Information</h3>
+      </div>
+    </div>
+
+    <div class="card-body">
+      <form action="{{ url_for('doctor.profile') }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <!-- Top Overview -->
+        <div style="display: flex; align-items: center; gap: 1.25rem; margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--slate-100);">
+          <div class="avatar-circle" style="width: 70px; height: 70px; font-size: 1.8rem; background: var(--teal-600);">
+            <i class="fa-solid fa-user-doctor"></i>
+          </div>
+          <div>
+            <h3 style="font-size: 1.25rem; font-weight: 700; color: var(--slate-800);">Dr. {{ user.full_name }}</h3>
+            <span class="badge badge-confirmed">{{ profile.specialization }}</span>
+            <div style="font-size: 0.82rem; color: var(--slate-400); margin-top: 0.2rem;">
+              {{ user.email }} &bull; Account Status: {{ user.account_status | capitalize }}
+            </div>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;">
+          <div class="form-group">
+            <label class="form-label">Full Name</label>
+            <input type="text" name="full_name" class="form-control" value="{{ user.full_name }}" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Contact Phone</label>
+            <input type="tel" name="phone" class="form-control" value="{{ user.phone }}" required>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;">
+          <div class="form-group">
+            <label class="form-label">Medical Specialization</label>
+            <select name="specialization" class="form-select" required>
+              {% for s in specializations %}
+                <option value="{{ s.name }}" {% if profile.specialization == s.name %}selected{% endif %}>{{ s.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Consultation Fee (₹)</label>
+            <input type="number" step="50" min="0" name="consultation_fee" class="form-control" value="{{ profile.consultation_fee }}" required>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.25rem;">
+          <div class="form-group">
+            <label class="form-label">Medical Qualifications / Degrees</label>
+            <input type="text" name="qualifications" class="form-control" value="{{ profile.qualifications }}" placeholder="e.g. MBBS, MD (Cardiology)" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Experience (Years)</label>
+            <input type="number" min="0" max="60" name="experience_years" class="form-control" value="{{ profile.experience_years }}" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Professional Biography & Expertise</label>
+          <textarea name="biography" class="form-control" rows="4" placeholder="Brief summary of clinical background, areas of focus, and patient care philosophy...">{{ profile.biography }}</textarea>
+        </div>
+
+        <!-- Security / Password change -->
+        <div style="border-top: 1px solid var(--slate-100); padding-top: 1.5rem; margin-top: 1.5rem;">
+          <h4 style="font-size: 1rem; font-weight: 700; color: var(--slate-800); margin-bottom: 0.4rem;">
+            Security Settings (Optional)
+          </h4>
+          <p style="font-size: 0.85rem; color: var(--slate-500); margin-bottom: 1rem;">
+            Leave blank if you do not want to alter your password.
+          </p>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+              <label class="form-label">Current Password</label>
+              <input type="password" name="current_password" class="form-control" placeholder="Existing password">
+            </div>
+            <div class="form-group">
+              <label class="form-label">New Password</label>
+              <input type="password" name="new_password" class="form-control" placeholder="New password" minlength="6">
+            </div>
+          </div>
+        </div>
+
+        <div style="border-top: 1px solid var(--slate-100); padding-top: 1.5rem; margin-top: 1.5rem; display: flex; justify-content: flex-end;">
+          <button type="submit" class="btn btn-primary">
+            <i class="fa-solid fa-floppy-disk"></i> Save Doctor Profile
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

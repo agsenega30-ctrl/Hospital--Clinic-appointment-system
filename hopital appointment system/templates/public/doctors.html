@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}Find Doctors & Specialists - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div style="background: white; border-bottom: 1px solid var(--slate-200); padding: 2.5rem 1.5rem;">
+  <div style="max-width: 1200px; margin: 0 auto;">
+    <h1 style="font-size: 2rem; font-weight: 800; color: var(--slate-900); margin-bottom: 0.5rem;">Find a Doctor</h1>
+    <p style="color: var(--slate-600); font-size: 0.95rem; margin-bottom: 1.75rem;">
+      Search our experienced team of physicians and healthcare providers by specialty, name, or availability.
+    </p>
+
+    <!-- Search & Filter Form -->
+    <form action="{{ url_for('public.doctors_directory') }}" method="GET" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) 120px; gap: 1rem; align-items: flex-end;">
+      <div class="form-group" style="margin-bottom: 0;">
+        <label class="form-label"><i class="fa-solid fa-magnifying-glass"></i> Search Name</label>
+        <input type="text" name="search" class="form-control" placeholder="Doctor name..." value="{{ search_query }}">
+      </div>
+
+      <div class="form-group" style="margin-bottom: 0;">
+        <label class="form-label"><i class="fa-solid fa-stethoscope"></i> Specialization</label>
+        <select name="specialization" class="form-select">
+          <option value="">All Specializations</option>
+          {% for s in specializations %}
+            <option value="{{ s.name }}" {% if selected_specialization == s.name %}selected{% endif %}>{{ s.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group" style="margin-bottom: 0;">
+        <label class="form-label"><i class="fa-solid fa-calendar"></i> Availability Date</label>
+        <input type="date" name="date" class="form-control" value="{{ selected_date }}" min="{{ get_now_local().strftime('%Y-%m-%d') }}">
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="height: 42px;">
+        <i class="fa-solid fa-filter"></i> Filter
+      </button>
+    </form>
+  </div>
+</div>
+
+<div style="max-width: 1200px; margin: 2.5rem auto; padding: 0 1.5rem;">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+    <p style="color: var(--slate-600); font-size: 0.92rem;">
+      Showing <strong>{{ doctors|length }}</strong> of <strong>{{ total_results }}</strong> doctors
+    </p>
+    {% if search_query or selected_specialization or selected_date %}
+      <a href="{{ url_for('public.doctors_directory') }}" class="btn btn-secondary btn-sm">
+        <i class="fa-solid fa-xmark"></i> Clear Filters
+      </a>
+    {% endif %}
+  </div>
+
+  {% if doctors and doctors|length > 0 %}
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem;">
+      {% for item in doctors %}
+        <div class="card" style="display: flex; flex-direction: column; justify-content: space-between; margin-bottom: 0;">
+          <div class="card-body">
+            <div style="display: flex; gap: 1.1rem; align-items: flex-start; margin-bottom: 1.25rem;">
+              <div class="avatar-circle" style="width: 58px; height: 58px; font-size: 1.35rem; flex-shrink: 0;">
+                <i class="fa-solid fa-user-doctor"></i>
+              </div>
+              <div>
+                <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--slate-800);">{{ item.user.full_name }}</h3>
+                <span class="badge badge-confirmed" style="margin-top: 0.25rem;">{{ item.profile.specialization }}</span>
+                <div style="font-size: 0.8rem; color: var(--slate-500); margin-top: 0.35rem;">
+                  {{ item.profile.qualifications }}
+                </div>
+              </div>
+            </div>
+
+            <p style="font-size: 0.88rem; color: var(--slate-600); line-height: 1.5; margin-bottom: 1rem; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
+              {{ item.profile.biography }}
+            </p>
+
+            <div style="background: var(--slate-50); border: 1px solid var(--slate-200); border-radius: var(--radius-md); padding: 0.85rem; font-size: 0.85rem; display: flex; flex-direction: column; gap: 0.4rem;">
+              <div style="display: flex; justify-content: space-between;">
+                <span style="color: var(--slate-500);">Experience:</span>
+                <strong>{{ item.profile.experience_years }} Years</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between;">
+                <span style="color: var(--slate-500);">Working Hours:</span>
+                <span>{{ item.profile.working_hours.start }} - {{ item.profile.working_hours.end }}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between;">
+                <span style="color: var(--slate-500);">Consultation Fee:</span>
+                <strong style="color: var(--teal-600); font-size: 0.95rem;">₹{{ item.profile.consultation_fee }}</strong>
+              </div>
+            </div>
+          </div>
+
+          <div style="padding: 1rem 1.5rem; background: var(--slate-50); border-top: 1px solid var(--slate-100); display: flex; gap: 0.75rem;">
+            <a href="{{ url_for('public.doctor_detail', doctor_id=item.user._id) }}" class="btn btn-secondary btn-sm" style="flex: 1;">
+              View Profile
+            </a>
+            {% if session.get('user_role') == 'patient' %}
+              <a href="{{ url_for('patient.book_appointment', doctor_id=item.user._id) }}" class="btn btn-primary btn-sm" style="flex: 1;">
+                <i class="fa-solid fa-calendar-check"></i> Book Slot
+              </a>
+            {% else %}
+              <a href="{{ url_for('auth.login', next=url_for('patient.book_appointment', doctor_id=item.user._id)) }}" class="btn btn-primary btn-sm" style="flex: 1;">
+                <i class="fa-solid fa-calendar-check"></i> Book Slot
+              </a>
+            {% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if total_pages > 1 %}
+      <div style="display: flex; justify-content: center; gap: 0.5rem; margin-top: 2.5rem;">
+        {% for p in range(1, total_pages + 1) %}
+          <a href="{{ url_for('public.doctors_directory', page=p, search=search_query, specialization=selected_specialization, date=selected_date) }}" class="btn btn-sm {% if p == current_page %}btn-primary{% else %}btn-secondary{% endif %}">
+            {{ p }}
+          </a>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+  {% else %}
+    <div class="card empty-state">
+      <div class="empty-state-icon"><i class="fa-solid fa-user-doctor"></i></div>
+      <h3 class="empty-state-title">No doctors matched your criteria</h3>
+      <p class="empty-state-text">Try adjusting your filters, searching for a different specialty, or clearing the search box.</p>
+      <a href="{{ url_for('public.doctors_directory') }}" class="btn btn-secondary">Reset Search Filters</a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

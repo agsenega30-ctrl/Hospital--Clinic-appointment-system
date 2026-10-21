@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block title %}Page Not Found (404) - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div style="min-height: 60vh; display: flex; align-items: center; justify-content: center; padding: 2rem;">
+  <div class="card" style="max-width: 480px; width: 100%; text-align: center; padding: 2.5rem 1.5rem;">
+    <div style="font-size: 4rem; color: var(--primary-600); margin-bottom: 0.5rem; font-weight: 800;">404</div>
+    <h2 style="font-size: 1.4rem; font-weight: 700; color: var(--slate-800); margin-bottom: 0.5rem;">Page Not Found</h2>
+    <p style="color: var(--slate-600); font-size: 0.95rem; margin-bottom: 1.75rem;">
+      The medical page or resource you requested cannot be located. It might have moved or the link may be outdated.
+    </p>
+    <div style="display: flex; gap: 0.75rem; justify-content: center;">
+      <a href="{{ url_for('public.index') }}" class="btn btn-primary"><i class="fa-solid fa-house"></i> Home</a>
+      <a href="{{ url_for('public.doctors_directory') }}" class="btn btn-secondary"><i class="fa-solid fa-user-doctor"></i> Find Doctors</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

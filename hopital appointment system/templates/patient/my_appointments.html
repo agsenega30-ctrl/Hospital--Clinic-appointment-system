@@ -1,0 +1,121 @@
+{% extends "base_dashboard.html" %}
+
+{% block title %}My Appointments - {{ app_name }}{% endblock %}
+{% block page_title %}My Appointments{% endblock %}
+
+{% block dashboard_content %}
+<div class="card">
+  <div class="card-header" style="flex-wrap: wrap; gap: 1rem;">
+    <div style="display: flex; align-items: center; gap: 0.5rem;">
+      <i class="fa-solid fa-clipboard-list" style="color: var(--primary-600); font-size: 1.2rem;"></i>
+      <h3 class="card-title">Appointment History & Upcoming Visits</h3>
+    </div>
+    <a href="{{ url_for('patient.book_appointment') }}" class="btn btn-primary btn-sm">
+      <i class="fa-solid fa-calendar-plus"></i> New Appointment
+    </a>
+  </div>
+
+  <!-- Filter Status Tabs -->
+  <div style="background: var(--slate-50); border-bottom: 1px solid var(--slate-200); padding: 0.75rem 1.5rem; display: flex; gap: 0.5rem; overflow-x: auto;">
+    {% set statuses = [('all', 'All Visits'), ('pending', 'Pending'), ('confirmed', 'Confirmed'), ('completed', 'Completed'), ('cancelled', 'Cancelled')] %}
+    {% for s_val, s_label in statuses %}
+      <a href="{{ url_for('patient.my_appointments', status=s_val) }}" class="btn btn-sm {% if current_status == s_val %}btn-primary{% else %}btn-secondary{% endif %}" style="border-radius: 20px;">
+        {{ s_label }}
+      </a>
+    {% endfor %}
+  </div>
+
+  <div class="card-body" style="padding: 0;">
+    {% if appointments and appointments|length > 0 %}
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Doctor</th>
+              <th>Specialization</th>
+              <th>Date & Time</th>
+              <th>Fee</th>
+              <th>Status</th>
+              <th>Reason / Details</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for app in appointments %}
+              <tr>
+                <td>
+                  <strong>Dr. {{ app.doctor.full_name if app.doctor else 'Doctor' }}</strong>
+                </td>
+                <td>
+                  <span class="badge badge-confirmed" style="font-size: 0.75rem;">
+                    {{ app.doctor_profile.specialization if app.doctor_profile else 'General Medicine' }}
+                  </span>
+                </td>
+                <td>
+                  <div><strong>{{ app.appointment_date | format_date }}</strong></div>
+                  <div style="font-size: 0.8rem; color: var(--slate-500);">{{ app.start_time | format_time }} - {{ app.end_time | format_time }}</div>
+                </td>
+                <td>
+                  <strong style="color: var(--teal-600);">₹{{ app.consultation_fee }}</strong>
+                </td>
+                <td>
+                  <span class="badge badge-{{ app.status }}">
+                    {{ app.status }}
+                  </span>
+                </td>
+                <td>
+                  <span style="font-size: 0.85rem; color: var(--slate-600);">
+                    {{ app.reason_for_visit or 'General Consultation' }}
+                  </span>
+                  {% if app.status == 'cancelled' and app.cancellation_reason %}
+                    <div style="font-size: 0.75rem; color: var(--danger-main); margin-top: 0.2rem;">
+                      Reason: {{ app.cancellation_reason }}
+                    </div>
+                  {% endif %}
+                </td>
+                <td>
+                  <div style="display: flex; gap: 0.4rem;">
+                    <a href="{{ url_for('patient.appointment_detail', appointment_id=app._id) }}" class="btn btn-secondary btn-sm" title="View Full Details">
+                      <i class="fa-solid fa-eye"></i>
+                    </a>
+
+                    {% if app.status in ['pending', 'confirmed'] %}
+                      <button type="button" class="btn btn-secondary btn-sm btn-open-reschedule" data-appointment-id="{{ app._id }}" data-doctor-id="{{ app.doctor_id }}" title="Reschedule Date/Time">
+                        <i class="fa-solid fa-arrows-rotate"></i>
+                      </button>
+                      <button type="button" class="btn btn-danger btn-sm btn-open-cancel" data-appointment-id="{{ app._id }}" title="Cancel Appointment">
+                        <i class="fa-solid fa-xmark"></i>
+                      </button>
+                    {% endif %}
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      {% if total_pages > 1 %}
+        <div style="padding: 1.25rem; display: flex; justify-content: center; gap: 0.5rem; border-top: 1px solid var(--slate-100);">
+          {% for p in range(1, total_pages + 1) %}
+            <a href="{{ url_for('patient.my_appointments', status=current_status, page=p) }}" class="btn btn-sm {% if p == current_page %}btn-primary{% else %}btn-secondary{% endif %}">
+              {{ p }}
+            </a>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+    {% else %}
+      <div class="empty-state">
+        <div class="empty-state-icon"><i class="fa-regular fa-calendar-xmark"></i></div>
+        <h3 class="empty-state-title">No appointments found</h3>
+        <p class="empty-state-text">There are no appointments matching this status filter.</p>
+        <a href="{{ url_for('patient.book_appointment') }}" class="btn btn-primary">
+          <i class="fa-solid fa-calendar-plus"></i> Schedule New Consultation
+        </a>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

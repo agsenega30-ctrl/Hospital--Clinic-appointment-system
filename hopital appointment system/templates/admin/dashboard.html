@@ -1,0 +1,260 @@
+{% extends "base_dashboard.html" %}
+
+{% block title %}Hospital Administration - {{ app_name }}{% endblock %}
+{% block page_title %}Administrative Dashboard{% endblock %}
+
+{% block dashboard_content %}
+<!-- Admin Quick Stats Grid -->
+<div class="metrics-grid">
+  <div class="metric-card">
+    <div class="metric-icon-box metric-icon-blue">
+      <i class="fa-solid fa-hospital-user"></i>
+    </div>
+    <div>
+      <div class="metric-value">{{ stats.patients }}</div>
+      <div class="metric-label">Registered Patients</div>
+    </div>
+  </div>
+
+  <div class="metric-card">
+    <div class="metric-icon-box metric-icon-green">
+      <i class="fa-solid fa-user-doctor"></i>
+    </div>
+    <div>
+      <div class="metric-value">{{ stats.doctors }}</div>
+      <div class="metric-label">Medical Staff / Doctors</div>
+    </div>
+  </div>
+
+  <div class="metric-card">
+    <div class="metric-icon-box metric-icon-purple">
+      <i class="fa-solid fa-calendar-check"></i>
+    </div>
+    <div>
+      <div class="metric-value">{{ stats.appointments }}</div>
+      <div class="metric-label">Total Appointments</div>
+    </div>
+  </div>
+
+  <div class="metric-card">
+    <div class="metric-icon-box metric-icon-amber">
+      <i class="fa-solid fa-hourglass-half"></i>
+    </div>
+    <div>
+      <div class="metric-value">{{ stats.pending }}</div>
+      <div class="metric-label">Pending Bookings</div>
+    </div>
+  </div>
+
+  <div class="metric-card">
+    <div class="metric-icon-box metric-icon-red">
+      <i class="fa-solid fa-calendar-xmark"></i>
+    </div>
+    <div>
+      <div class="metric-value">{{ stats.cancelled }}</div>
+      <div class="metric-label">Cancellations</div>
+    </div>
+  </div>
+
+  <div class="metric-card">
+    <div class="metric-icon-box metric-icon-blue" style="background: #e0e7ff; color: #4338ca;">
+      <i class="fa-solid fa-user-check"></i>
+    </div>
+    <div>
+      <div class="metric-value">{{ stats.pending_approvals }}</div>
+      <div class="metric-label">Doctor Approvals</div>
+    </div>
+  </div>
+</div>
+
+<!-- Pending Doctor Registrations Alert Section -->
+{% if pending_doctors and pending_doctors|length > 0 %}
+<div class="card" style="border-left: 4px solid var(--warning-main);">
+  <div class="card-header" style="background: var(--warning-bg);">
+    <div style="display: flex; align-items: center; gap: 0.65rem;">
+      <i class="fa-solid fa-user-clock" style="color: var(--warning-main); font-size: 1.2rem;"></i>
+      <h3 class="card-title" style="color: var(--warning-text);">Doctor Registrations Awaiting Verification ({{ pending_doctors|length }})</h3>
+    </div>
+    <a href="{{ url_for('admin.doctor_management', status='pending_approval') }}" class="btn btn-secondary btn-sm">
+      Review All
+    </a>
+  </div>
+  <div class="card-body" style="padding: 0;">
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Applicant Name</th>
+            <th>Email</th>
+            <th>Specialization</th>
+            <th>Requested At</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for doc in pending_doctors %}
+            <tr>
+              <td><strong>{{ doc.full_name }}</strong></td>
+              <td>{{ doc.email }}</td>
+              <td><span class="badge badge-confirmed">{{ doc.profile.specialization if doc.profile else 'General Medicine' }}</span></td>
+              <td>{{ doc.created_at.strftime('%b %d, %Y') if doc.created_at else '' }}</td>
+              <td>
+                <div style="display: flex; gap: 0.4rem;">
+                  <form action="{{ url_for('admin.doctor_management') }}" method="POST" style="display: inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="action" value="approve">
+                    <input type="hidden" name="user_id" value="{{ doc._id }}">
+                    <button type="submit" class="btn btn-success btn-sm"><i class="fa-solid fa-check"></i> Approve</button>
+                  </form>
+                  <form action="{{ url_for('admin.doctor_management') }}" method="POST" style="display: inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="action" value="reject">
+                    <input type="hidden" name="user_id" value="{{ doc._id }}">
+                    <button type="submit" class="btn btn-danger btn-sm"><i class="fa-solid fa-xmark"></i> Reject</button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<!-- Analytics Charts Preview -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+  <div class="card" style="margin-bottom: 0;">
+    <div class="card-header">
+      <h3 class="card-title"><i class="fa-solid fa-chart-pie" style="color: var(--primary-600);"></i> Appointment Status Distribution</h3>
+    </div>
+    <div class="card-body" style="height: 280px; display: flex; align-items: center; justify-content: center;">
+      <canvas id="statusChart"></canvas>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom: 0;">
+    <div class="card-header">
+      <h3 class="card-title"><i class="fa-solid fa-chart-line" style="color: var(--teal-600);"></i> Monthly Booking Trend</h3>
+    </div>
+    <div class="card-body" style="height: 280px; display: flex; align-items: center; justify-content: center;">
+      <canvas id="monthlyTrendChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- Recent Appointments Table -->
+<div class="card">
+  <div class="card-header">
+    <div style="display: flex; align-items: center; gap: 0.65rem;">
+      <i class="fa-solid fa-clipboard-list" style="color: var(--primary-600); font-size: 1.2rem;"></i>
+      <h3 class="card-title">Recent System Activity & Bookings</h3>
+    </div>
+    <a href="{{ url_for('admin.appointment_management') }}" class="btn btn-secondary btn-sm">
+      View All Appointments
+    </a>
+  </div>
+
+  <div class="card-body" style="padding: 0;">
+    {% if recent_appointments and recent_appointments|length > 0 %}
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Patient</th>
+              <th>Doctor</th>
+              <th>Date & Time</th>
+              <th>Status</th>
+              <th>Fee</th>
+              <th>Booked At</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for app in recent_appointments %}
+              <tr>
+                <td><strong>{{ app.patient.full_name if app.patient else 'Patient' }}</strong></td>
+                <td>Dr. {{ app.doctor.full_name if app.doctor else 'Doctor' }}</td>
+                <td>{{ app.appointment_date | format_date }} at {{ app.start_time | format_time }}</td>
+                <td><span class="badge badge-{{ app.status }}">{{ app.status }}</span></td>
+                <td>₹{{ app.consultation_fee }}</td>
+                <td style="font-size: 0.8rem; color: var(--slate-400);">{{ app.created_at.strftime('%b %d, %H:%M') if app.created_at else '' }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <div class="empty-state-icon"><i class="fa-solid fa-calendar-check"></i></div>
+        <h3 class="empty-state-title">No appointments recorded</h3>
+        <p class="empty-state-text">System activity will be logged here as users schedule consultations.</p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+  try {
+    const res = await fetch('/api/analytics/charts');
+    const data = await res.json();
+
+    // 1. Status Chart Donut
+    const ctxStatus = document.getElementById('statusChart');
+    if (ctxStatus && data.status_counts) {
+      new Chart(ctxStatus, {
+        type: 'doughnut',
+        data: {
+          labels: ['Pending', 'Confirmed', 'Completed', 'Cancelled'],
+          datasets: [{
+            data: [
+              data.status_counts.pending || 0,
+              data.status_counts.confirmed || 0,
+              data.status_counts.completed || 0,
+              data.status_counts.cancelled || 0
+            ],
+            backgroundColor: ['#d97706', '#0284c7', '#16a34a', '#94a3b8']
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: 'bottom' } }
+        }
+      });
+    }
+
+    // 2. Monthly Trend Chart
+    const ctxTrend = document.getElementById('monthlyTrendChart');
+    if (ctxTrend && data.monthly_counts) {
+      const labels = Object.keys(data.monthly_counts);
+      const values = Object.values(data.monthly_counts);
+
+      new Chart(ctxTrend, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Appointments',
+            data: values,
+            borderColor: '#0284c7',
+            backgroundColor: 'rgba(2, 132, 199, 0.1)',
+            fill: true,
+            tension: 0.3
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+        }
+      });
+    }
+  } catch (e) {
+    console.error('Failed to load chart data:', e);
+  }
+});
+</script>
+{% endblock %}

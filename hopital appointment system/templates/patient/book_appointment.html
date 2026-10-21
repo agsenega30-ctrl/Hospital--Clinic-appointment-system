@@ -1,0 +1,77 @@
+{% extends "base_dashboard.html" %}
+
+{% block title %}Book Doctor Appointment - {{ app_name }}{% endblock %}
+{% block page_title %}Book an Appointment{% endblock %}
+
+{% block dashboard_content %}
+<div style="max-width: 900px; margin: 0 auto;">
+  <div class="card">
+    <div class="card-header">
+      <div style="display: flex; align-items: center; gap: 0.65rem;">
+        <div class="brand-icon" style="width: 34px; height: 34px; font-size: 1rem;"><i class="fa-solid fa-calendar-check"></i></div>
+        <h3 class="card-title">Schedule Doctor Consultation</h3>
+      </div>
+      <a href="{{ url_for('patient.my_appointments') }}" class="btn btn-secondary btn-sm">
+        <i class="fa-solid fa-clipboard-list"></i> My Appointments
+      </a>
+    </div>
+
+    <div class="card-body">
+      <form action="{{ url_for('patient.book_appointment') }}" method="POST" id="bookingForm">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="start_time" id="startTimeInput" required>
+
+        <!-- Step 1: Select Doctor -->
+        <div class="form-group">
+          <label class="form-label"><i class="fa-solid fa-user-doctor" style="color: var(--primary-600);"></i> 1. Select Physician / Specialist</label>
+          <select name="doctor_id" id="doctorSelect" class="form-select" required>
+            <option value="">-- Choose a doctor --</option>
+            {% for doc in doctors %}
+              <option value="{{ doc.user._id }}" {% if selected_doctor_id == (doc.user._id|string) %}selected{% endif %}>
+                Dr. {{ doc.user.full_name }} &bull; {{ doc.profile.specialization }} (Fee: ₹{{ doc.profile.consultation_fee }})
+              </option>
+            {% endfor %}
+          </select>
+          <span class="form-hint">Tip: View qualifications, working days, and reviews in the <a href="{{ url_for('public.doctors_directory') }}" target="_blank">Doctor Directory</a>.</span>
+        </div>
+
+        <!-- Step 2: Choose Date -->
+        <div class="form-group">
+          <label class="form-label"><i class="fa-solid fa-calendar-day" style="color: var(--primary-600);"></i> 2. Select Consultation Date</label>
+          <input type="date" name="appointment_date" id="appointmentDate" class="form-control" min="{{ today_min }}" required>
+          <span class="form-hint">Available slots will automatically populate once both doctor and date are chosen.</span>
+        </div>
+
+        <!-- Step 3: Dynamic Time Slots -->
+        <div class="form-group">
+          <label class="form-label"><i class="fa-solid fa-clock" style="color: var(--primary-600);"></i> 3. Choose Available Time Slot</label>
+          <div id="slotsLoading" style="display: none; padding: 12px 0; color: var(--primary-600); font-weight: 500; font-size: 0.9rem;">
+            <i class="fa-solid fa-spinner fa-spin"></i> Checking live physician schedule...
+          </div>
+          <div id="slotsContainer" style="min-height: 80px; padding: 0.5rem 0;">
+            <div style="color: var(--slate-500); font-size: 0.9rem;">
+              Please select a doctor and date above to load available consultation times.
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 4: Reason for Visit -->
+        <div class="form-group">
+          <label class="form-label"><i class="fa-solid fa-notes-medical" style="color: var(--primary-600);"></i> 4. Reason for Consultation / Symptoms (Optional)</label>
+          <textarea name="reason_for_visit" class="form-control" rows="3" placeholder="Briefly describe your symptoms or the primary concern for this visit..."></textarea>
+        </div>
+
+        <!-- Step 5: Submit -->
+        <div style="border-top: 1px solid var(--slate-200); padding-top: 1.5rem; margin-top: 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+          <div style="font-size: 0.85rem; color: var(--slate-500);">
+            <i class="fa-solid fa-lock" style="color: var(--teal-600);"></i> Concurrency-safe atomic booking enabled
+          </div>
+          <button type="submit" class="btn btn-primary btn-lg" id="submitBookingBtn" disabled>
+            <i class="fa-solid fa-calendar-check"></i> Confirm Appointment Booking
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

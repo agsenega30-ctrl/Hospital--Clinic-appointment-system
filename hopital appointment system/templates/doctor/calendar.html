@@ -1,0 +1,39 @@
+{% extends "base_dashboard.html" %}
+
+{% block title %}Doctor Schedule Calendar - {{ app_name }}{% endblock %}
+{% block page_title %}Doctor Calendar & Schedule{% endblock %}
+
+{% block dashboard_content %}
+<div class="card">
+  <div class="card-header" style="flex-wrap: wrap; gap: 1rem;">
+    <div>
+      <h3 class="card-title">Interactive Schedule Calendar</h3>
+      <p style="font-size: 0.82rem; color: var(--slate-500); margin-top: 0.2rem;">
+        View patient appointments by month, week, or day. Click any consultation for patient details.
+      </p>
+    </div>
+    <!-- Status Legend -->
+    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center; font-size: 0.82rem;">
+      <span style="display: flex; align-items: center; gap: 0.35rem;">
+        <span style="width: 10px; height: 10px; border-radius: 50%; background: #d97706;"></span> Pending
+      </span>
+      <span style="display: flex; align-items: center; gap: 0.35rem;">
+        <span style="width: 10px; height: 10px; border-radius: 50%; background: #0284c7;"></span> Confirmed
+      </span>
+      <span style="display: flex; align-items: center; gap: 0.35rem;">
+        <span style="width: 10px; height: 10px; border-radius: 50%; background: #16a34a;"></span> Completed
+      </span>
+      <span style="display: flex; align-items: center; gap: 0.35rem;">
+        <span style="width: 10px; height: 10px; border-radius: 50%; background: #94a3b8;"></span> Cancelled
+      </span>
+      <a href="{{ url_for('doctor.availability_settings') }}" class="btn btn-secondary btn-sm" style="margin-left: 0.5rem;">
+        <i class="fa-solid fa-clock"></i> Set Working Hours
+      </a>
+    </div>
+  </div>
+
+  <div class="card-body">
+    <div id="appointmentCalendar" style="min-height: 700px;"></div>
+  </div>
+</div>
+{% endblock %}

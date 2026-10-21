@@ -1,0 +1,145 @@
+{% extends "base_dashboard.html" %}
+
+{% block title %}Availability & Schedule Configuration - {{ app_name }}{% endblock %}
+{% block page_title %}Availability & Schedule Settings{% endblock %}
+
+{% block dashboard_content %}
+<div style="max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; gap: 2rem;">
+  <!-- Schedule Parameters Form -->
+  <div class="card">
+    <div class="card-header">
+      <div style="display: flex; align-items: center; gap: 0.65rem;">
+        <i class="fa-solid fa-business-time" style="color: var(--teal-600); font-size: 1.2rem;"></i>
+        <h3 class="card-title">Weekly Schedule & Consultation Parameters</h3>
+      </div>
+    </div>
+
+    <div class="card-body">
+      <form action="{{ url_for('doctor.availability_settings') }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <!-- Working Days -->
+        <div class="form-group">
+          <label class="form-label"><i class="fa-regular fa-calendar-check"></i> 1. Active Working Days</label>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 0.75rem; margin-top: 0.5rem;">
+            {% for day in all_days %}
+              <label style="display: flex; align-items: center; gap: 0.5rem; background: var(--slate-50); border: 1px solid var(--slate-200); padding: 0.65rem 0.85rem; border-radius: var(--radius-md); font-size: 0.9rem; font-weight: 500; cursor: pointer;">
+                <input type="checkbox" name="working_days" value="{{ day }}" {% if day in profile.working_days %}checked{% endif %}>
+                <span>{{ day }}</span>
+              </label>
+            {% endfor %}
+          </div>
+          <span class="form-hint">Patients will only be able to view and book slots on your selected working days.</span>
+        </div>
+
+        <!-- Hours & Duration -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.25rem; margin-top: 1.5rem; border-top: 1px solid var(--slate-100); padding-top: 1.5rem;">
+          <div class="form-group">
+            <label class="form-label"><i class="fa-regular fa-clock"></i> Daily Start Time</label>
+            <input type="time" name="start_hour" class="form-control" value="{{ profile.working_hours.start }}" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label"><i class="fa-regular fa-clock"></i> Daily End Time</label>
+            <input type="time" name="end_hour" class="form-control" value="{{ profile.working_hours.end }}" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label"><i class="fa-solid fa-stopwatch"></i> Slot Duration</label>
+            <select name="appointment_duration_minutes" class="form-select">
+              <option value="15" {% if profile.appointment_duration_minutes == 15 %}selected{% endif %}>15 Minutes</option>
+              <option value="20" {% if profile.appointment_duration_minutes == 20 %}selected{% endif %}>20 Minutes</option>
+              <option value="30" {% if profile.appointment_duration_minutes == 30 %}selected{% endif %}>30 Minutes (Recommended)</option>
+              <option value="45" {% if profile.appointment_duration_minutes == 45 %}selected{% endif %}>45 Minutes</option>
+              <option value="60" {% if profile.appointment_duration_minutes == 60 %}selected{% endif %}>60 Minutes</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Daily Break Times -->
+        <div style="border-top: 1px solid var(--slate-100); padding-top: 1.5rem; margin-top: 1rem;">
+          <h4 style="font-size: 1rem; font-weight: 700; color: var(--slate-800); margin-bottom: 0.5rem;">
+            <i class="fa-solid fa-mug-saucer" style="color: var(--warning-main);"></i> Daily Scheduled Break / Lunch
+          </h4>
+          <p style="font-size: 0.85rem; color: var(--slate-500); margin-bottom: 1rem;">
+            No patient appointments will be booked during your configured break interval.
+          </p>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+              <label class="form-label">Break Starts</label>
+              <input type="time" name="break_start" class="form-control" value="{{ profile.break_times[0].start if profile.break_times else '13:00' }}">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Break Ends</label>
+              <input type="time" name="break_end" class="form-control" value="{{ profile.break_times[0].end if profile.break_times else '14:00' }}">
+            </div>
+          </div>
+        </div>
+
+        <div style="border-top: 1px solid var(--slate-100); padding-top: 1.5rem; margin-top: 1rem; display: flex; justify-content: flex-end;">
+          <button type="submit" class="btn btn-primary">
+            <i class="fa-solid fa-floppy-disk"></i> Save Schedule Parameters
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Blocked Dates / Vacation Manager -->
+  <div class="card">
+    <div class="card-header">
+      <div style="display: flex; align-items: center; gap: 0.65rem;">
+        <i class="fa-solid fa-ban" style="color: var(--danger-main); font-size: 1.2rem;"></i>
+        <h3 class="card-title">Block Dates (Leave & Out of Clinic)</h3>
+      </div>
+    </div>
+
+    <div class="card-body">
+      <p style="font-size: 0.88rem; color: var(--slate-600); margin-bottom: 1.25rem;">
+        Specify dates when you will be on leave, in surgery, or out of clinic. Patients will be prevented from selecting blocked dates.
+      </p>
+
+      <form action="{{ url_for('doctor.availability_settings') }}" method="POST" style="display: flex; gap: 0.75rem; align-items: flex-end; margin-bottom: 1.75rem; flex-wrap: wrap;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="action" value="add_block_date">
+
+        <div style="flex: 1; min-width: 220px;">
+          <label class="form-label">Select Date to Block</label>
+          <input type="date" name="new_block_date" class="form-control" min="{{ today_min }}" required>
+        </div>
+
+        <button type="submit" class="btn btn-danger">
+          <i class="fa-solid fa-plus"></i> Block Selected Date
+        </button>
+      </form>
+
+      <!-- Currently Blocked Dates List -->
+      <h5 style="font-size: 0.9rem; font-weight: 700; color: var(--slate-700); margin-bottom: 0.75rem;">
+        Currently Blocked Dates ({{ profile.blocked_dates | length }})
+      </h5>
+
+      {% if profile.blocked_dates and profile.blocked_dates|length > 0 %}
+        <div style="display: flex; flex-wrap: wrap; gap: 0.65rem;">
+          {% for b_date in profile.blocked_dates %}
+            <form action="{{ url_for('doctor.availability_settings') }}" method="POST" style="display: inline;">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="hidden" name="action" value="remove_block_date">
+              <input type="hidden" name="remove_date" value="{{ b_date }}">
+
+              <div style="background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 0.4rem 0.75rem; border-radius: 20px; font-size: 0.82rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem;">
+                <span><i class="fa-solid fa-calendar-xmark"></i> {{ b_date | format_date }}</span>
+                <button type="submit" style="background: none; border: none; color: #991b1b; cursor: pointer; font-size: 1rem; line-height: 1;" title="Unblock Date">&times;</button>
+              </div>
+            </form>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div style="background: var(--slate-50); border: 1px dashed var(--slate-300); border-radius: var(--radius-md); padding: 1.5rem; text-align: center; color: var(--slate-500); font-size: 0.88rem;">
+          No upcoming dates are currently blocked.
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

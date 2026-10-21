@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+
+{% block title %}Hospital & Clinic Appointment System - Expert Healthcare at Your Fingertips{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #ffffff 100%); padding: 5rem 1.5rem 4rem; border-bottom: 1px solid var(--slate-200);">
+  <div style="max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 3rem; align-items: center;">
+    <div>
+      <div style="display: inline-flex; align-items: center; gap: 0.5rem; background: white; border: 1px solid var(--primary-200); padding: 0.35rem 0.85rem; border-radius: 20px; font-size: 0.82rem; font-weight: 600; color: var(--primary-700); margin-bottom: 1.25rem; box-shadow: var(--shadow-sm);">
+        <i class="fa-solid fa-shield-heart" style="color: var(--teal-500);"></i> Certified Medical Specialists
+      </div>
+      <h1 style="font-size: 2.75rem; font-weight: 800; line-height: 1.15; color: var(--slate-900); margin-bottom: 1.2rem; letter-spacing: -0.02em;">
+        Skip the Wait. <br>Book Appointments with Top Doctors <span style="color: var(--primary-600);">Instantly</span>.
+      </h1>
+      <p style="font-size: 1.1rem; color: var(--slate-600); line-height: 1.6; margin-bottom: 2rem; max-width: 520px;">
+        Connect directly with board-certified physicians, view real-time available time slots, schedule consultations, and manage your health journey without phone queues.
+      </p>
+
+      <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+        {% if session.get('user_id') and session.get('user_role') == 'patient' %}
+          <a href="{{ url_for('patient.book_appointment') }}" class="btn btn-primary btn-lg">
+            <i class="fa-solid fa-calendar-check"></i> Book an Appointment
+          </a>
+        {% else %}
+          <a href="{{ url_for('public.doctors_directory') }}" class="btn btn-primary btn-lg">
+            <i class="fa-solid fa-calendar-check"></i> Book an Appointment
+          </a>
+        {% endif %}
+        <a href="{{ url_for('public.doctors_directory') }}" class="btn btn-secondary btn-lg">
+          <i class="fa-solid fa-user-doctor"></i> View Doctors
+        </a>
+      </div>
+
+      <!-- Quick Metrics -->
+      <div style="display: flex; gap: 2rem; margin-top: 3rem; border-top: 1px solid var(--slate-200); padding-top: 1.5rem;">
+        <div>
+          <div style="font-size: 1.6rem; font-weight: 800; color: var(--primary-700);">{{ stats.doctors }}+</div>
+          <div style="font-size: 0.82rem; color: var(--slate-500); font-weight: 500;">Specialist Doctors</div>
+        </div>
+        <div>
+          <div style="font-size: 1.6rem; font-weight: 800; color: var(--primary-700);">{{ stats.departments }}+</div>
+          <div style="font-size: 0.82rem; color: var(--slate-500); font-weight: 500;">Departments</div>
+        </div>
+        <div>
+          <div style="font-size: 1.6rem; font-weight: 800; color: var(--primary-700);">99.8%</div>
+          <div style="font-size: 0.82rem; color: var(--slate-500); font-weight: 500;">Patient Satisfaction</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hero Visual Card -->
+    <div style="background: white; border-radius: var(--radius-xl); padding: 2rem; box-shadow: var(--shadow-xl); border: 1px solid var(--slate-200); position: relative;">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; border-bottom: 1px solid var(--slate-100); padding-bottom: 1rem;">
+        <div>
+          <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--slate-800);">Quick Doctor Search</h3>
+          <p style="font-size: 0.82rem; color: var(--slate-500);">Find by medical specialization or date</p>
+        </div>
+        <span class="badge badge-confirmed"><i class="fa-solid fa-circle" style="font-size: 0.5rem; color: var(--primary-600);"></i> Live Slots</span>
+      </div>
+
+      <form action="{{ url_for('public.doctors_directory') }}" method="GET">
+        <div class="form-group">
+          <label class="form-label"><i class="fa-solid fa-magnifying-glass"></i> Doctor Name or Keyword</label>
+          <input type="text" name="search" class="form-control" placeholder="e.g. Dr. Sarah Jenkins, Cardiology">
+        </div>
+        <div class="form-group">
+          <label class="form-label"><i class="fa-solid fa-stethoscope"></i> Medical Department</label>
+          <select name="specialization" class="form-select">
+            <option value="">All Specializations</option>
+            {% for s in specializations %}
+              <option value="{{ s.name }}">{{ s.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label"><i class="fa-solid fa-calendar"></i> Preferred Consultation Date</label>
+          <input type="date" name="date" class="form-control" min="{{ get_now_local().strftime('%Y-%m-%d') }}">
+        </div>
+        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.75rem;">
+          <i class="fa-solid fa-magnifying-glass"></i> Search Available Appointments
+        </button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- How It Works Section -->
+<section style="padding: 5rem 1.5rem; background: white;">
+  <div style="max-width: 1200px; margin: 0 auto; text-align: center;">
+    <span style="font-size: 0.85rem; font-weight: 700; text-transform: uppercase; color: var(--primary-600); letter-spacing: 0.05em;">Streamlined Process</span>
+    <h2 style="font-size: 2rem; font-weight: 800; color: var(--slate-900); margin: 0.5rem 0 2.5rem;">How Antigravity Care Works</h2>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 2rem; text-align: left;">
+      <div class="card" style="padding: 2rem; border-top: 4px solid var(--primary-600);">
+        <div style="width: 50px; height: 50px; border-radius: 50%; background: var(--primary-100); color: var(--primary-700); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; font-weight: 700; margin-bottom: 1.25rem;">
+          1
+        </div>
+        <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--slate-800); margin-bottom: 0.5rem;">Discover Specialists</h3>
+        <p style="color: var(--slate-600); font-size: 0.9rem; line-height: 1.6;">
+          Browse verified doctors by specialty, review their medical qualifications, years of experience, and transparent consultation fees.
+        </p>
+      </div>
+
+      <div class="card" style="padding: 2rem; border-top: 4px solid var(--teal-500);">
+        <div style="width: 50px; height: 50px; border-radius: 50%; background: #ccfbf1; color: var(--teal-600); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; font-weight: 700; margin-bottom: 1.25rem;">
+          2
+        </div>
+        <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--slate-800); margin-bottom: 0.5rem;">Select Exact Time Slot</h3>
+        <p style="color: var(--slate-600); font-size: 0.9rem; line-height: 1.6;">
+          Pick a date and choose an available consultation slot generated directly from the doctor's live working schedule.
+        </p>
+      </div>
+
+      <div class="card" style="padding: 2rem; border-top: 4px solid var(--primary-800);">
+        <div style="width: 50px; height: 50px; border-radius: 50%; background: var(--slate-100); color: var(--slate-800); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; font-weight: 700; margin-bottom: 1.25rem;">
+          3
+        </div>
+        <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--slate-800); margin-bottom: 0.5rem;">Manage Seamlessly</h3>
+        <p style="color: var(--slate-600); font-size: 0.9rem; line-height: 1.6;">
+          Receive in-app confirmation notifications, view your upcoming appointments on an interactive calendar, or reschedule when plans change.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Featured Doctors Section -->
+<section style="padding: 5rem 1.5rem; background: var(--slate-50); border-top: 1px solid var(--slate-200);">
+  <div style="max-width: 1200px; margin: 0 auto;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2.5rem; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <span style="font-size: 0.85rem; font-weight: 700; text-transform: uppercase; color: var(--primary-600); letter-spacing: 0.05em;">Our Medical Staff</span>
+        <h2 style="font-size: 2rem; font-weight: 800; color: var(--slate-900); margin-top: 0.25rem;">Featured Doctors</h2>
+      </div>
+      <a href="{{ url_for('public.doctors_directory') }}" class="btn btn-outline-primary">
+        View All Doctors <i class="fa-solid fa-arrow-right"></i>
+      </a>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem;">
+      {% for item in featured_doctors %}
+        <div class="card" style="margin-bottom: 0; display: flex; flex-direction: column; justify-content: space-between;">
+          <div class="card-body">
+            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+              <div class="avatar-circle" style="width: 54px; height: 54px; font-size: 1.3rem;">
+                <i class="fa-solid fa-user-doctor"></i>
+              </div>
+              <div>
+                <h4 style="font-size: 1.05rem; font-weight: 700; color: var(--slate-800);">{{ item.user.full_name }}</h4>
+                <span class="badge badge-confirmed" style="margin-top: 0.2rem;">{{ item.profile.specialization }}</span>
+              </div>
+            </div>
+
+            <p style="font-size: 0.85rem; color: var(--slate-600); line-height: 1.5; margin-bottom: 1rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+              {{ item.profile.biography }}
+            </p>
+
+            <div style="font-size: 0.85rem; color: var(--slate-500); display: flex; flex-direction: column; gap: 0.35rem; border-top: 1px solid var(--slate-100); padding-top: 0.75rem;">
+              <div><i class="fa-solid fa-graduation-cap" style="color: var(--primary-600); width: 18px;"></i> {{ item.profile.qualifications }}</div>
+              <div><i class="fa-solid fa-clock-rotate-left" style="color: var(--primary-600); width: 18px;"></i> {{ item.profile.experience_years }} Years Experience</div>
+              <div><i class="fa-solid fa-tag" style="color: var(--teal-600); width: 18px;"></i> <strong>₹{{ item.profile.consultation_fee }}</strong> Consultation Fee</div>
+            </div>
+          </div>
+
+          <div style="padding: 1rem 1.5rem; background: var(--slate-50); border-top: 1px solid var(--slate-100); display: flex; gap: 0.5rem;">
+            <a href="{{ url_for('public.doctor_detail', doctor_id=item.user._id) }}" class="btn btn-secondary btn-sm" style="flex: 1;">Profile</a>
+            {% if session.get('user_role') == 'patient' %}
+              <a href="{{ url_for('patient.book_appointment', doctor_id=item.user._id) }}" class="btn btn-primary btn-sm" style="flex: 1;">Book Slot</a>
+            {% else %}
+              <a href="{{ url_for('public.doctor_detail', doctor_id=item.user._id) }}" class="btn btn-primary btn-sm" style="flex: 1;">Book Slot</a>
+            {% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- Clinical Specialties Section -->
+<section style="padding: 5rem 1.5rem; background: white;">
+  <div style="max-width: 1200px; margin: 0 auto;">
+    <div style="text-align: center; margin-bottom: 3rem;">
+      <span style="font-size: 0.85rem; font-weight: 700; text-transform: uppercase; color: var(--primary-600); letter-spacing: 0.05em;">Comprehensive Care</span>
+      <h2 style="font-size: 2rem; font-weight: 800; color: var(--slate-900); margin-top: 0.25rem;">Medical Specialties</h2>
+      <p style="color: var(--slate-500); font-size: 0.95rem; max-width: 600px; margin: 0.5rem auto 0;">
+        From primary preventive consultations to specialized surgical opinions, our hospital provides complete clinical coverage.
+      </p>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1.5rem;">
+      {% for spec in specializations %}
+        <div class="card" style="padding: 1.5rem; margin-bottom: 0; transition: transform 0.2s, box-shadow 0.2s;">
+          <div style="width: 44px; height: 44px; border-radius: var(--radius-md); background: var(--primary-50); color: var(--primary-600); display: flex; align-items: center; justify-content: center; font-size: 1.25rem; margin-bottom: 1rem;">
+            <i class="fa-solid fa-stethoscope"></i>
+          </div>
+          <h4 style="font-size: 1.05rem; font-weight: 700; color: var(--slate-800); margin-bottom: 0.35rem;">{{ spec.name }}</h4>
+          <p style="font-size: 0.85rem; color: var(--slate-600); line-height: 1.5;">{{ spec.description }}</p>
+          <a href="{{ url_for('public.doctors_directory', specialization=spec.name) }}" style="display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; font-weight: 600; color: var(--primary-600); margin-top: 1rem;">
+            Find Doctors <i class="fa-solid fa-chevron-right" style="font-size: 0.75rem;"></i>
+          </a>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- Call to Action Banner -->
+<section style="background: linear-gradient(135deg, var(--primary-700), var(--primary-900)); color: white; padding: 4.5rem 1.5rem; text-align: center;">
+  <div style="max-width: 800px; margin: 0 auto;">
+    <h2 style="font-size: 2.2rem; font-weight: 800; margin-bottom: 1rem;">Ready for Your Health Consultation?</h2>
+    <p style="font-size: 1.05rem; opacity: 0.9; margin-bottom: 2rem; line-height: 1.6;">
+      Create an account in less than a minute and gain 24/7 access to physician schedules, digital booking, and automated appointment updates.
+    </p>
+    <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+      <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg" style="background: white; color: var(--primary-800); box-shadow: 0 4px 14px rgba(0,0,0,0.2);">
+        <i class="fa-solid fa-user-plus"></i> Register as Patient
+      </a>
+      <a href="{{ url_for('public.doctors_directory') }}" class="btn btn-secondary btn-lg" style="background: transparent; color: white; border-color: rgba(255,255,255,0.4);">
+        <i class="fa-solid fa-magnifying-glass"></i> Explore Schedule
+      </a>
+    </div>
+  </div>
+</section>
+{% endblock %}

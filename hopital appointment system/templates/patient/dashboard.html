@@ -1,0 +1,160 @@
+{% extends "base_dashboard.html" %}
+
+{% block title %}Patient Dashboard - {{ app_name }}{% endblock %}
+{% block page_title %}Patient Dashboard{% endblock %}
+
+{% block dashboard_content %}
+<!-- Welcome & Quick Booking Banner -->
+<div style="background: linear-gradient(135deg, var(--primary-700), var(--primary-900)); color: white; border-radius: var(--radius-xl); padding: 2rem; margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem; box-shadow: var(--shadow-md);">
+  <div>
+    <span style="font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.85;">Welcome Back</span>
+    <h1 style="font-size: 1.85rem; font-weight: 800; margin: 0.25rem 0 0.5rem;">Hello, {{ session.get('user_name') }}</h1>
+    <p style="font-size: 0.95rem; opacity: 0.9; max-width: 500px;">
+      Schedule appointments with certified physicians, track your medical consultations, and view calendar schedules.
+    </p>
+  </div>
+  <div style="display: flex; gap: 0.75rem;">
+    <a href="{{ url_for('patient.book_appointment') }}" class="btn btn-primary" style="background: white; color: var(--primary-800); box-shadow: 0 4px 10px rgba(0,0,0,0.15);">
+      <i class="fa-solid fa-calendar-plus"></i> Book Consultation
+    </a>
+    <a href="{{ url_for('patient.calendar_view') }}" class="btn btn-secondary" style="background: transparent; color: white; border-color: rgba(255,255,255,0.4);">
+      <i class="fa-solid fa-calendar-days"></i> My Calendar
+    </a>
+  </div>
+</div>
+
+<!-- Metrics Overview Cards -->
+<div class="metrics-grid">
+  <div class="metric-card">
+    <div class="metric-icon-box metric-icon-blue">
+      <i class="fa-solid fa-clipboard-list"></i>
+    </div>
+    <div>
+      <div class="metric-value">{{ stats.total }}</div>
+      <div class="metric-label">Total Appointments</div>
+    </div>
+  </div>
+
+  <div class="metric-card">
+    <div class="metric-icon-box metric-icon-amber">
+      <i class="fa-solid fa-clock"></i>
+    </div>
+    <div>
+      <div class="metric-value">{{ stats.upcoming }}</div>
+      <div class="metric-label">Upcoming / Pending</div>
+    </div>
+  </div>
+
+  <div class="metric-card">
+    <div class="metric-icon-box metric-icon-green">
+      <i class="fa-solid fa-circle-check"></i>
+    </div>
+    <div>
+      <div class="metric-value">{{ stats.completed }}</div>
+      <div class="metric-label">Completed Consultations</div>
+    </div>
+  </div>
+
+  <div class="metric-card">
+    <div class="metric-icon-box metric-icon-red">
+      <i class="fa-solid fa-calendar-xmark"></i>
+    </div>
+    <div>
+      <div class="metric-value">{{ stats.cancelled }}</div>
+      <div class="metric-label">Cancelled Visits</div>
+    </div>
+  </div>
+</div>
+
+<!-- Upcoming Appointments Section -->
+<div class="card">
+  <div class="card-header">
+    <div style="display: flex; align-items: center; gap: 0.5rem;">
+      <i class="fa-solid fa-calendar-day" style="color: var(--primary-600);"></i>
+      <h3 class="card-title">Next Scheduled Consultations</h3>
+    </div>
+    <a href="{{ url_for('patient.my_appointments') }}" class="btn btn-secondary btn-sm">
+      View All ({{ stats.total }})
+    </a>
+  </div>
+
+  <div class="card-body" style="padding: 0;">
+    {% if upcoming_appointments and upcoming_appointments|length > 0 %}
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Doctor & Specialty</th>
+              <th>Date & Time</th>
+              <th>Reason for Visit</th>
+              <th>Consultation Fee</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for app in upcoming_appointments %}
+              <tr>
+                <td>
+                  <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <div class="avatar-circle" style="width: 38px; height: 38px; font-size: 0.9rem;">
+                      <i class="fa-solid fa-user-doctor"></i>
+                    </div>
+                    <div>
+                      <strong>Dr. {{ app.doctor.full_name if app.doctor else 'Doctor' }}</strong>
+                      <div style="font-size: 0.78rem; color: var(--slate-500);">
+                        {{ app.doctor_profile.specialization if app.doctor_profile else 'General Medicine' }}
+                      </div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <div><i class="fa-regular fa-calendar" style="color: var(--primary-600);"></i> <strong>{{ app.appointment_date | format_date }}</strong></div>
+                  <div style="font-size: 0.8rem; color: var(--slate-500);"><i class="fa-regular fa-clock"></i> {{ app.start_time | format_time }} - {{ app.end_time | format_time }}</div>
+                </td>
+                <td>
+                  <span style="font-size: 0.88rem; color: var(--slate-700);">
+                    {{ app.reason_for_visit or 'General Health Checkup' }}
+                  </span>
+                </td>
+                <td>
+                  <strong style="color: var(--teal-600);">₹{{ app.consultation_fee }}</strong>
+                </td>
+                <td>
+                  <span class="badge badge-{{ app.status }}">
+                    {{ app.status }}
+                  </span>
+                </td>
+                <td>
+                  <div style="display: flex; gap: 0.4rem;">
+                    <a href="{{ url_for('patient.appointment_detail', appointment_id=app._id) }}" class="btn btn-secondary btn-sm" title="View Details">
+                      <i class="fa-solid fa-eye"></i>
+                    </a>
+                    {% if app.status in ['pending', 'confirmed'] %}
+                      <button type="button" class="btn btn-secondary btn-sm btn-open-reschedule" data-appointment-id="{{ app._id }}" data-doctor-id="{{ app.doctor_id }}" title="Reschedule Date/Time">
+                        <i class="fa-solid fa-arrows-rotate"></i>
+                      </button>
+                      <button type="button" class="btn btn-danger btn-sm btn-open-cancel" data-appointment-id="{{ app._id }}" title="Cancel Appointment">
+                        <i class="fa-solid fa-xmark"></i>
+                      </button>
+                    {% endif %}
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <div class="empty-state-icon"><i class="fa-regular fa-calendar-plus"></i></div>
+        <h3 class="empty-state-title">No Upcoming Appointments</h3>
+        <p class="empty-state-text">You have no upcoming consultations scheduled. Book an appointment with a specialist today.</p>
+        <a href="{{ url_for('patient.book_appointment') }}" class="btn btn-primary">
+          <i class="fa-solid fa-calendar-plus"></i> Schedule an Appointment
+        </a>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
